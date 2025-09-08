@@ -1,0 +1,207 @@
+// app/web/mapHtml.ts
+export const MAP_HTML = `
+<!DOCTYPE html><html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  html,body,#map{height:100%;margin:0;padding:0}
+  .leaflet-popup-content-wrapper{border-radius:10px}
+  .poi-img { display:block; width:240px; max-width:80vw; height:auto; margin-top:6px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .poi-title { font:700 14px/1.3 sans-serif; margin:0; }
+
+  .leaflet-div-icon{background:transparent;border:none;}
+
+  .num-pin{
+    width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font:700 14px/1 sans-serif;color:#fff;
+    border:2px solid #fff;
+    box-shadow:0 0 0 2px rgba(0,0,0,.15);
+  }
+  .num-pin.start { background:#16a34a; }   /* verde pentru Start */
+  .num-pin.middle { background:#2563eb; }  /* albastru pentru intermediare */
+  .num-pin.end { background:#dc2626; }     /* roșu pentru Final */
+</style>
+</head><body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map', { zoomControl: true });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution:'&copy; OpenStreetMap'
+  }).addTo(map);
+  map.setView([45.9432, 24.9668], 6); // fallback România
+
+  let markers = [];
+  let routeLayer = null;
+
+  function clearAll(){
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+    if(routeLayer){ map.removeLayer(routeLayer); routeLayer = null; }
+  }
+
+  function numberedIcon(n, cls){
+    return L.divIcon({
+      html: '<div class="num-pin '+cls+'">'+n+'</div>',
+      className: "",
+      iconSize: [28,28],
+      iconAnchor: [14,28],
+      popupAnchor: [0,-28]
+    });
+  }
+
+  function transitIcon(kind){
+    var sym = kind === 'metro' ? 'M' : '🚌';
+    return L.divIcon({
+      html: '<div class="num-pin transit">'+sym+'</div>',
+      className: "",
+      iconSize: [28,28],
+      iconAnchor: [14,28],
+      popupAnchor: [0,-28]
+    });
+  }
+
+  async function drawRoute(coords, mode, dashed){
+    const profile = mode === "driving" ? "driving" : (mode === "bike" ? "cycling" : "foot");
+    const path = coords.map(c => c.lon + "," + c.lat).join(";");
+    const url = "https://router.project-osrm.org/route/v1/" + profile + "/" + path + "?overview=full&geometries=geojson";
+    const res = await fetch(url);
+    const json = await res.json();
+    const route = json.routes && json.routes[0];
+    if(!route) return;
+    routeLayer = L.geoJSON(route.geometry, {
+      style: { color: "#2563eb", weight: 5, opacity: 0.9, dashArray: dashed ? '6 6' : undefined }
+    }).addTo(map);
+  }
+
+  function fitTo(coords){
+    const ll = coords.map(c => [c.lat, c.lon]);
+    const b = L.latLngBounds(ll);
+    map.fitBounds(b.pad(0.2));
+  }
+
+  // (Transit shapes disabled for stability)
+
+  // transit icon (avoid emojis to prevent encoding issues)
+  function transitIcon(kind){
+    var sym = (kind === 'metro') ? 'M' : 'B';
+    return L.divIcon({
+      html: '<div class="num-pin transit" style="background:#111;font-size:16px;width:22px;height:22px;line-height:22px">'+sym+'</div>',
+      className: "",
+      iconSize: [22,22],
+      iconAnchor: [11,22],
+      popupAnchor: [0,-22]
+    });
+  }
+
+  // unified step icon: numbered with optional transit badge above
+  function stepIcon(num, kind, transit){
+    var badge = '';
+    if (kind === 'transit'){
+      var sym = (transit === 'metro') ? 'M' : 'B';
+      badge = '<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font:700 12px/1 sans-serif;color:#0ea5e9;text-shadow:0 1px 2px rgba(0,0,0,.35)">'+sym+'</div>';
+    }
+    return L.divIcon({
+      html: '<div style="position:relative"><div class="num-pin middle">'+num+'</div>'+badge+'</div>',
+      className: "",
+      iconSize: [28,28],
+      iconAnchor: [14,28],
+      popupAnchor: [0,-28]
+    });
+  }
+
+  async function drawSegments(segs){
+    for (var i=0;i<segs.length;i++){
+      var s = segs[i];
+      if (s.kind === 'bus' || s.kind === 'metro'){
+        var color = s.kind === 'bus' ? '#f59e0b' : '#0ea5e9';
+        if (s.shape && s.shape.length){
+          for (var k=0;k<s.shape.length;k++){
+            var poly = s.shape[k];
+            var latlngs2 = poly.map(function(pt){ return [pt.lat, pt.lon]; });
+            L.polyline(latlngs2, { color: color, weight: 4, opacity: 0.9 }).addTo(map);
+          }
+          // alighting step is rendered as a numbered marker elsewhere
+        } else {
+          var latlngs = [ [s.from.lat, s.from.lon], [s.to.lat, s.to.lon] ];
+          L.polyline(latlngs, { color: color, weight: 4, opacity: 0.9 }).addTo(map);
+        }
+      } else {
+        // non-transit legs: never use driving for public transport context; use foot/bike only
+        var isBike = (s.kind === 'bike');
+        var dashed = !isBike; // foot dashed, bike solid
+        await drawRoute([s.from, s.to], isBike ? 'bike' : 'foot', dashed);
+      }
+    }
+  }
+
+  async function fetchNearbyPhoto(lat, lon){
+    try{
+      var url1 = "https://commons.wikimedia.org/w/api.php?action=query&list=geosearch&gscoord=" + lat + "|" + lon + "&gsradius=300&gslimit=10&gsnamespace=6&format=json&origin=*";
+      var r1 = await fetch(url1); var j1 = await r1.json();
+      var first = j1 && j1.query && j1.query.geosearch && j1.query.geosearch[0];
+      var pgTitle = first && first.title;
+      if(!pgTitle) return null;
+      var t = encodeURIComponent(pgTitle);
+      var url2 = "https://commons.wikimedia.org/w/api.php?action=query&titles=" + t + "&prop=imageinfo&iiprop=url&iiurlwidth=600&format=json&origin=*";
+      var r2 = await fetch(url2); var j2 = await r2.json();
+      var page = j2 && j2.query && j2.query.pages && Object.values(j2.query.pages)[0];
+      var info = page && page.imageinfo && page.imageinfo[0];
+      return (info && (info.thumburl || info.url)) || null;
+    }catch(_){ return null; }
+  }
+
+  window.renderPlan = async function(payload){
+    try{
+      clearAll();
+      const points = payload.points || [];
+      const avatar = payload.userAvatar || null;
+      var poiIndex = 1;
+      for (let idx=0; idx<points.length; idx++){
+        const p = points[idx];
+        var icon;
+        if (p.kind === 'transit') {
+          icon = transitIcon(p.transit);
+        } else if (p.kind === 'poi') {
+          icon = numberedIcon(poiIndex++, 'middle');
+        } else {
+          if (avatar) {
+            icon = L.divIcon({ html: '<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.15)"><img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover"/></div>', className: "", iconSize: [28,28], iconAnchor: [14,28], popupAnchor: [0,-28] });
+          } else {
+            icon = L.divIcon({ html: '<div class="num-pin start"></div>', className: "", iconSize: [22,22], iconAnchor: [11,22], popupAnchor: [0,-22] });
+          }
+        }
+        var m = L.marker([p.lat, p.lon], { icon }).addTo(map);
+        var pid = 'poi_' + idx;
+        var title = (idx+1)+'. '+(p.name || 'Punct');
+        var imgHtml = p.imageUrl ? ('<img class="poi-img" src="'+p.imageUrl+'" />') : ('<div id="'+pid+'"></div>');
+        m.bindPopup('<div><div class="poi-title">'+title+'</div>'+imgHtml+'</div>');
+        m.on('popupopen', async () => {
+          if(p.imageUrl) return; // already has
+          var url = await fetchNearbyPhoto(p.lat, p.lon);
+          if(!url) return;
+          var el = document.getElementById(pid);
+          if(el){ el.innerHTML = '<img class="poi-img" src="'+url+'" />'; }
+        });
+        markers.push(m);
+      }
+      if(points.length){ fitTo(points); }
+      if (payload && Array.isArray(payload.segments) && payload.segments.length > 0){
+        try {
+          await drawSegments(payload.segments);
+        } catch (e) {
+          // fallback to single-route drawing if segments fail
+          if(points.length >= 2){ await drawRoute(points, payload.mode || 'foot', (payload.mode || 'foot') === 'foot'); }
+        }
+      } else if(points.length >= 2){
+        await drawRoute(points, payload.mode || "foot", (payload.mode || 'foot') === 'foot');
+      }
+    }catch(e){}
+  };
+</script>
+</body></html>
+`.trim();
+
+
+
