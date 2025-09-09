@@ -49,7 +49,7 @@ export type Transport = "walk" | "public" | "car" | "bike";
 export type WithWho = "solo" | "friends" | "pet" | "family" | "partner";
 
 export type GenerateOptions = {
-  duration: number;          // minutes
+  duration: number;          // minutes (30..720)
   transport?: Transport;
   budget?: number;           // Infinity if unlimited
   firstLeg?: number;         // minutes until first stop
@@ -64,6 +64,7 @@ export type GenerateOptions = {
   familyDisabilities?: boolean;
   childAge?: number;         // 0..17
   shuffle?: boolean;
+  center?: LatLng;           // preferred start location (lat/lon) from Home
   // Optional: user profile preferences to tailor sequences
   userPrefs?: {
     age?: number | null;

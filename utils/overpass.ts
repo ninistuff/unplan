@@ -188,7 +188,8 @@ export async function fetchPOIsAround(
   cats: OverpassCategory[],
   radiusMeters = 1200,
   limitPerCat = 15,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  stats?: { raw: number; filtered: number }
 ): Promise<POI[]> {
   const bb = bboxFromCenter(center.lat, center.lon, radiusMeters);
   const bbox = `${bb.s},${bb.w},${bb.n},${bb.e}`;
@@ -200,7 +201,10 @@ export async function fetchPOIsAround(
     const ql = `[out:json][timeout:20];(${tags});out center ${limitPerCat};`;
     try {
       const json = await callOverpass(ql, signal);
-      all.push(...parseElements(json.elements || []));
+      const elements = Array.isArray(json?.elements) ? json.elements : [];
+      const parsed = parseElements(elements);
+      if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
+      all.push(...parsed);
     } catch (_) {
       // skip a failing category; keep others
     }
@@ -216,7 +220,8 @@ export async function fetchPOIsInCity(
   center: { lat: number; lon: number },
   cats: OverpassCategory[],
   limitPerCat = 25,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  stats?: { raw: number; filtered: number }
 ): Promise<POI[]> {
   const all: POI[] = [];
   for (const cat of cats) {
@@ -231,11 +236,14 @@ area.a[boundary="administrative"][admin_level~"^(8|9)$"]->.city;
 out center ${limitPerCat};`;
     try {
       const json = await callOverpass(ql, signal);
-      all.push(...parseElements(json.elements || []));
+      const elements = Array.isArray(json?.elements) ? json.elements : [];
+      const parsed = parseElements(elements);
+      if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
+      all.push(...parsed);
     } catch (_) {
       // fall back per-category: use around bbox if city lookup fails for this category
       try {
-        const fallback = await fetchPOIsAround(center, [cat], 3000, limitPerCat);
+        const fallback = await fetchPOIsAround(center, [cat], 3000, limitPerCat, signal, stats);
         all.push(...fallback);
       } catch {}
     }

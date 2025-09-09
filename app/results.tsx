@@ -70,6 +70,10 @@ export default function ResultsScreen() {
     fa?: '0' | '1';
     ca?: number; // 0..17
     shuffle?: '0' | '1';
+    lat?: number;
+    lon?: number;
+    city?: string;
+    lt?: string; // local time ISO
   };
 
   const { params, appliedFallbacks, normalizedLink, seed } = useMemo(() => {
@@ -121,7 +125,15 @@ export default function ResultsScreen() {
 
     const shuffle = get('shuffle') === '1' ? '1' : '0';
 
-    const params: Params = { d, t: t as any, w: w as any, b, fc, fx, fd, pt, fp, fg, fa, ca, shuffle };
+    const latNum = Number(get('lat'));
+    const lonNum = Number(get('lon'));
+    const city = get('city');
+    const lt = get('lt');
+    const params: Params = { d, t: t as any, w: w as any, b, fc, fx, fd, pt, fp, fg, fa, ca, shuffle,
+      ...(Number.isFinite(latNum) && Number.isFinite(lonNum) ? { lat: latNum, lon: lonNum } : {}),
+      ...(typeof city === 'string' ? { city } : {}),
+      ...(typeof lt === 'string' ? { lt } : {}),
+    };
 
     const linkParams: Record<string,string> = {
       d: String(d), t: String(t), w: String(w),
@@ -191,6 +203,7 @@ export default function ResultsScreen() {
       familyDisabilities: params.fa === '1',
       childAge: params.ca,
       shuffle: params.shuffle === '1',
+      center: (Number.isFinite(params.lat as any) && Number.isFinite(params.lon as any)) ? { lat: params.lat as number, lon: params.lon as number } : undefined,
       userPrefs: {
         age: undefined,
         dob: user?.profile?.dob,
@@ -428,10 +441,11 @@ export default function ResultsScreen() {
     );
   }
 
-  if (!plans || plans.length === 0) {
+  const hasAnyPoiStops = (plans || []).some(p => (p.steps || []).some((s: any) => s.kind === 'poi'));
+  if (!plans || plans.length === 0 || !hasAnyPoiStops) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16, gap: 16 }}>
-        <Text style={{ textAlign: "center" }}>{t(lang,'noPlans')}</Text>
+        <Text style={{ textAlign: "center" }}>{lang==='ro' ? 'Nu avem opriri valide' : 'No valid stops'}</Text>
         <Pressable onPress={load} style={{ backgroundColor: "#2563eb", paddingHorizontal: 18, paddingVertical: 10, borderRadius: 12 }}>
           <Text style={{ color: "#fff", fontWeight: "600" }}>{t(lang,'retry')}</Text>
         </Pressable>
@@ -610,26 +624,28 @@ export default function ResultsScreen() {
             </View>
 
             <View style={{ flexDirection: "row", marginTop: 8, alignItems: 'center' }}>
-              <Link href={{ pathname: "/plan/[id]", params: { id: String(p.id ?? idx), payload: JSON.stringify(p) } }} asChild>
-                <Pressable
-                  android_ripple={{ color: "#dbeafe" }}
-                  style={{
-                    backgroundColor: theme.color,
-                    paddingHorizontal: 20,
-                    paddingVertical: 12,
-                    borderRadius: 12,
-                    marginRight: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    flex: 1
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontWeight: "700", marginRight: 6 }}>
-                    {lang === 'ro' ? 'Vezi pe hartă' : 'View on map'}
-                  </Text>
-                  <Text style={{ color: "#fff", fontSize: 16 }}>🗺️</Text>
-                </Pressable>
-              </Link>
+              {((p.steps || []).some((s:any)=>s.kind==='poi')) && (
+                <Link href={{ pathname: "/plan/[id]", params: { id: String(p.id ?? idx), payload: JSON.stringify(p) } }} asChild>
+                  <Pressable
+                    android_ripple={{ color: "#dbeafe" }}
+                    style={{
+                      backgroundColor: theme.color,
+                      paddingHorizontal: 20,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      marginRight: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      flex: 1
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontWeight: "700", marginRight: 6 }}>
+                      {lang === 'ro' ? 'Vezi pe hartă' : 'View on map'}
+                    </Text>
+                    <Text style={{ color: "#fff", fontSize: 16 }}>🗺️</Text>
+                  </Pressable>
+                </Link>
+              )}
 
               <Pressable onPress={() => favs.toggle(p)} accessibilityLabel={isFav ? 'Remove favorite' : 'Add favorite'} style={{ borderWidth: 1, borderColor: isFav ? '#ef4444' : '#e5e7eb', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, marginRight: 8 }}>
                 <Ionicons name={isFav ? (Platform.OS === 'ios' ? 'heart.fill' : 'heart') as any : (Platform.OS === 'ios' ? 'heart' : 'heart-outline') as any} size={18} color={isFav ? '#ef4444' : '#111'} />

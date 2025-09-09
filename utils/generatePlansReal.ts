@@ -1,7 +1,7 @@
 // utils/generatePlansReal.ts — Generator real (V1) cu Overpass + reguli de bază
 import { locationService } from "../lib/locationService";
-import type { GenerateOptions, Plan, LatLng } from "../lib/planTypes";
-import { fetchPOIsAround, type OverpassCategory } from "./overpass";
+import type { GenerateOptions, LatLng, Plan, POI } from "../lib/planTypes";
+import { fetchPOIsAround, fetchPOIsInCity, type OverpassCategory } from "./overpass";
 
 // Haversine simplu (m)
 function hav(a: LatLng, b: LatLng) {
@@ -116,24 +116,87 @@ function pick<T>(arr: T[], n: number): T[] {
 export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal): Promise<Plan[]> {
   if (signal?.aborted) return [];
 
-  // 1) Locație curentă
-  let center: LatLng = { lat: 44.4268, lon: 26.1025 }; // fallback: București
-  try {
-    const loc = await locationService.getCurrentLocation({ timeout: 8000, highAccuracy: true });
-    center = { lat: loc.latitude, lon: loc.longitude };
-  } catch {
-    // folosim fallback
+  // 1) Locație curentă (preferă coordonate primite din Home)
+  let center: LatLng = opts.center || { lat: 44.4268, lon: 26.1025 }; // fallback: București
+  if (!opts.center) {
+    try {
+      const loc = await locationService.getCurrentLocation({ timeout: 8000, highAccuracy: true });
+      center = { lat: loc.latitude, lon: loc.longitude };
+    } catch {
+      // folosim fallback
+    }
   }
 
   // 2) Semnale meteo rapide
   const wx = await getWeatherFlags(center.lat, center.lon);
 
-  // 3) Overpass: POI-uri în jur
-  const allowed: OverpassCategory[] = ["cafe", "bar", "cinema", "museum", "park"];
-  const rad = radiusFor(opts.transport || "walk", opts.duration);
-  let pois = [] as Awaited<ReturnType<typeof fetchPOIsAround>>;
+  // 3) Overpass: POI-uri în jur cu fallback progresiv + statistici
+  const allowed: OverpassCategory[] = [
+    "cafe","restaurant","fast_food","tea_room","bar","pub",
+    "cinema","library","museum","gallery","zoo","aquarium","attraction",
+    "fitness_centre","sports_centre","bowling_alley","escape_game","swimming_pool","climbing_indoor",
+    "arcade","karaoke","spa","park"
+  ];
+
+  const initialRad = radiusFor(opts.transport || "walk", opts.duration);
+  const radiusAttempts = [initialRad, Math.round(initialRad * 1.5), Math.round(initialRad * 2), 12000];
+  let requireOpen = true;
+  let selectedPois: POI[] = [];
+  let statsSummary = { raw: 0, filtered: 0, afterWho: 0, radius: initialRad, requireOpen };
+
+  const categoriesWanted = ((): string[] => {
+    const preferIndoor = wx.rainSoon || wx.hot;
+    const who = opts.withWho || "friends";
+    if (preferIndoor) {
+      if (who === "family") return ["museum","cafe","cinema"];
+      if (who === "partner") return ["cafe","museum","cinema"];
+      if (who === "pet") return ["park","cafe"]; // doar dacă evident pet-friendly
+      return ["cafe","bar","cinema"];
+    } else {
+      if (who === "family") return ["park","museum","cafe"];
+      if (who === "partner") return ["cafe","park","museum"];
+      if (who === "pet") return ["park","cafe"];
+      return ["park","cafe","bar"];
+    }
+  })();
+
+  for (let attempt = 0; attempt < radiusAttempts.length; attempt++) {
+    if (signal?.aborted) return [];
+    const rad = radiusAttempts[attempt];
+    const stats = { raw: 0, filtered: 0 };
+    let pois: POI[] = [];
+    try {
+      pois = await fetchPOIsAround(center, allowed, rad, 20, signal, stats);
+    } catch {
+      // fallback la tot orașul dacă around eșuează
+      try {
+        pois = await fetchPOIsInCity(center, allowed, 20, signal, stats);
+      } catch {}
+    }
+
+    const afterOpen = requireOpen ? pois.filter(p => p.openStatus !== 'closed') : pois;
+    const afterWho = afterOpen.filter(p => categoriesWanted.includes(p.category as any));
+
+    statsSummary = { raw: stats.raw, filtered: afterOpen.length, afterWho: afterWho.length, radius: rad, requireOpen } as any;
+
+    if (afterWho.length > 0) {
+      selectedPois = afterWho;
+      break;
+    }
+
+    // relaxare: după 2 încercări, renunțăm la filtrarea după openStatus
+    if (attempt === 1) requireOpen = false;
+  }
+
+  // Logging cerut: 3 numere + 3 POI din zonă
   try {
-    pois = await fetchPOIsAround(center, allowed, rad, 20, signal);
+    const nearest = selectedPois
+      .map(p => ({ p, d: hav(center, { lat: p.lat, lon: p.lon }) }))
+      .sort((a,b)=>a.d-b.d)
+      .slice(0,3)
+      .map(x => x.p.name);
+    console.log('[Generator] Overpass stats', { center, ...statsSummary });
+    console.log('[Generator] Sample POIs:', nearest);
   } catch {}
 
   // Filtrări de bază: nume reale (parser face deja), distanță segmentată după transport
@@ -147,21 +210,9 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
   const mode = modeFromTransport(opts.transport);
   const transport = opts.transport || "walk";
 
-  // 5) Heuristici categorie după "cu cine" și vreme
-  const preferIndoor = wx.rainSoon || wx.hot;
+  // 5) Heuristici categorie după "cu cine" și vreme — deja determinate în categoriesWanted
   function pickCategories(): string[] {
-    const who = opts.withWho || "friends";
-    if (preferIndoor) {
-      if (who === "family") return ["museum", "cafe", "cinema"];
-      if (who === "partner") return ["cafe", "museum", "cinema"];
-      if (who === "pet") return ["park", "cafe"]; // doar dacă evident pet-friendly, altfel evităm marcajul
-      return ["cafe", "bar", "cinema"];
-    } else {
-      if (who === "family") return ["park", "museum", "cafe"];
-      if (who === "partner") return ["cafe", "park", "museum"];
-      if (who === "pet") return ["park", "cafe"];
-      return ["park", "cafe", "bar"];
-    }
+    return categoriesWanted.slice();
   }
 
   // Ajutor: găsește un traseu cu N opriri care încape în timp și distanțe per segment
@@ -171,7 +222,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     let travelMin = 0; let visitMin = 0;
 
     // alege un POI de start (prima oprire) cât mai aproape de anchor
-    const byDist = pois
+    const byDist = selectedPois
       .map(p => ({ p, d: hav(anchor, { lat: p.lat, lon: p.lon }) }))
       .sort((a,b) => a.d - b.d)
       .map(x => x.p);
@@ -213,7 +264,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
 
   // 6) Construiește 3 planuri distincte
   const categories = pickCategories();
-  const anchors = pick(pois, 5).map(p => ({ lat: p.lat, lon: p.lon }));
+  const anchors = pick(selectedPois, 5).map(p => ({ lat: p.lat, lon: p.lon }));
   const plans: Plan[] = [];
 
   for (let i = 0; i < 5 && plans.length < 3; i++) {
@@ -252,7 +303,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     const p: Plan = {
       id,
       title,
-      steps: [ { kind: "start", name: "Start", coord: center }, ...itin.steps.map(s => ({ kind: "poi", name: s.name, coord: { lat: s.lat, lon: s.lon }, category: s.category as any })) ],
+      steps: [ { kind: "start", name: "Start", coord: center }, ...itin.steps.map(s => ({ kind: "poi" as const, name: s.name, coord: { lat: s.lat, lon: s.lon }, category: s.category as any })) ],
       mode,
       stops: itin.steps.map(s => ({ name: s.name, lat: s.lat, lon: s.lon })),
       km: Math.round((itin.travelMin * (mode === "foot" ? 0.08 : mode === "bike" ? 0.24 : 0.3)) * 10) / 10, // aproximativ
@@ -264,13 +315,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     plans.push(p);
   }
 
-  // Dacă nu am destule planuri, livrează fallback minimalist
-  if (plans.length < 3) {
-    while (plans.length < 3) {
-      plans.push({ id: String.fromCharCode(65 + plans.length), title: "Plan", steps: [{ kind: "start", name: "Start", coord: center }], mode, km: 0, min: Math.min(60, opts.duration) });
-    }
-  }
-
+  // Nu livrăm planuri goale; dacă nu s-au construit rute valide, întoarcem [] pentru empty state in Results
   return plans;
 }
 

@@ -10,7 +10,7 @@ export type AppIconName =
   // custom composites
   | 'family-custom' | 'date-custom';
 
-export function Icon({ name, size = 28, color }: { name: AppIconName; size?: number; color?: string }) {
+export default function Icon({ name, size = 28, color }: { name: AppIconName; size?: number; color?: string }) {
   // Composite family (2 părinți + copil)
   if (name === 'family-custom') {
     const parent = Math.round(size * 0.5);

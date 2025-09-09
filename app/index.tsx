@@ -24,7 +24,7 @@ import { useAuth } from "../lib/auth";
 import { t } from "../lib/i18n";
 import { useTheme } from "../lib/ThemeProvider";
 import { buildWeatherMessage } from "../utils/weatherMessage";
-import { Icon } from "./components/Icon";
+import Icon from "./_components/Icon";
 
 // Header cu profil + vreme integrat în această pagină
 // removed progress header bar
