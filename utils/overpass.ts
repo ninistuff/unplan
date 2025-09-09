@@ -8,13 +8,38 @@ const ENDPOINTS = [
   "https://overpass.openstreetmap.ru/api/interpreter",
 ] as const;
 
-export type OverpassCategory = "cafe" | "bar" | "cinema" | "museum" | "park";
+export type OverpassCategory =
+  | "cafe" | "restaurant" | "fast_food" | "tea_room"
+  | "bar" | "pub"
+  | "cinema" | "library" | "museum" | "gallery"
+  | "zoo" | "aquarium" | "attraction"
+  | "fitness_centre" | "sports_centre" | "bowling_alley" | "escape_game" | "swimming_pool" | "climbing_indoor"
+  | "arcade" | "karaoke" | "spa"
+  | "park";
 
 const tagMap: Record<OverpassCategory, string[]> = {
   cafe: ['amenity="cafe"'],
-  bar: ['amenity="bar"', 'amenity="pub"'],
+  restaurant: ['amenity="restaurant"'],
+  fast_food: ['amenity="fast_food"'],
+  tea_room: ['amenity="tearoom"', 'amenity="tea_room"'],
+  bar: ['amenity="bar"'],
+  pub: ['amenity="pub"'],
   cinema: ['amenity="cinema"'],
+  library: ['amenity="library"'],
   museum: ['tourism="museum"'],
+  gallery: ['tourism="gallery"'],
+  zoo: ['tourism="zoo"'],
+  aquarium: ['tourism="aquarium"'],
+  attraction: ['tourism="attraction"'],
+  fitness_centre: ['leisure="fitness_centre"'],
+  sports_centre: ['leisure="sports_centre"'],
+  bowling_alley: ['leisure="bowling_alley"'],
+  escape_game: ['leisure="escape_game"'],
+  swimming_pool: ['leisure="swimming_pool"'],
+  climbing_indoor: ['leisure="climbing"', 'sport="climbing"'],
+  arcade: ['leisure="amusement_arcade"', 'amenity="arcade"'],
+  karaoke: ['amenity="karaoke"'],
+  spa: ['leisure="spa"', 'amenity="spa"'],
   park: ['leisure="park"'],
 };
 
@@ -23,6 +48,40 @@ function bboxFromCenter(lat: number, lon: number, radiusMeters = 1200) {
   const dLon = radiusMeters / (111320 * Math.cos((lat * Math.PI) / 180));
   return { s: lat - dLat, w: lon - dLon, n: lat + dLat, e: lon + dLon };
 }
+function nameValid(name: any): boolean {
+  if (typeof name !== "string") return false;
+  const n = name.trim();
+  if (n.length < 3) return false;
+  if (/^unnamed/i.test(n)) return false;
+  return true;
+}
+
+function isExcludedGeneric(tags: any): boolean {
+  const landuse = tags?.landuse;
+  if (["cemetery", "grass", "meadow", "greenfield", "construction", "industrial", "farmland"].includes(landuse)) return true;
+  if (tags?.amenity === "grave_yard") return true;
+  return false;
+}
+
+function parseOpeningHoursSimple(opening_hours: string | undefined, now = new Date()): "open" | "closed" | "unknown" {
+  if (!opening_hours || typeof opening_hours !== "string") return "unknown";
+  const txt = opening_hours.trim();
+  if (txt === "24/7") return "open";
+  // Mo-Su 08:00-22:00 (ignores breaks); also accept 09:00-21:00
+  const m = txt.match(/^(Mo-Su)\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/);
+  if (m) {
+    const sh = parseInt(m[2], 10), sm = parseInt(m[3], 10);
+    const eh = parseInt(m[4], 10), em = parseInt(m[5], 10);
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const start = sh * 60 + sm;
+    const end = eh * 60 + em;
+    if (end > start) return minutes >= start && minutes <= end ? "open" : "closed";
+    // overnight window (rare for these categories)
+    return minutes >= start || minutes <= end ? "open" : "closed";
+  }
+  return "unknown";
+}
+
 
 async function callOverpass(body: string, externalSignal?: AbortSignal) {
   let lastErr: any;
@@ -51,33 +110,59 @@ async function callOverpass(body: string, externalSignal?: AbortSignal) {
 }
 
 function parseElements(elements: any[]): POI[] {
+  const now = new Date();
   const pois: POI[] = elements
     .map((el) => {
       const lat = el.type === "node" ? el.lat : el.center?.lat;
       const lon = el.type === "node" ? el.lon : el.center?.lon;
       if (lat == null || lon == null) return null;
 
-      const name = el.tags?.name || el.tags?.["name:ro"];
-      if (!name) return null; // skip unnamed places
-      const category = ((): POI["category"] => {
-        if (el.tags?.amenity === "cafe") return "cafe";
-        if (el.tags?.amenity === "bar" || el.tags?.amenity === "pub") return "bar";
-        if (el.tags?.amenity === "cinema") return "cinema";
-        if (el.tags?.tourism === "museum") return "museum";
-        if (el.tags?.leisure === "park") return "park";
-        return "cafe";
+      const tags = el.tags || {};
+      const name = tags.name || tags["name:ro"];
+      if (!nameValid(name)) return null;
+      if (isExcludedGeneric(tags)) return null;
+
+      const category = ((): POI["category"] | null => {
+        if (tags.amenity === "cafe") return "cafe";
+        if (tags.amenity === "restaurant") return "restaurant";
+        if (tags.amenity === "fast_food") return "fast_food";
+        if (tags.amenity === "tearoom" || tags.amenity === "tea_room") return "tea_room";
+        if (tags.amenity === "bar") return "bar";
+        if (tags.amenity === "pub") return "pub";
+        if (tags.amenity === "cinema") return "cinema";
+        if (tags.amenity === "library") return "library";
+        if (tags.amenity === "karaoke") return "karaoke";
+        if (tags.amenity === "spa") return "spa";
+        if (tags.leisure === "fitness_centre") return "fitness_centre";
+        if (tags.leisure === "sports_centre") return "sports_centre";
+        if (tags.leisure === "bowling_alley") return "bowling_alley";
+        if (tags.leisure === "escape_game") return "escape_game";
+        if (tags.leisure === "swimming_pool") return "swimming_pool";
+        if (tags.leisure === "climbing" || tags.sport === "climbing") return "climbing_indoor";
+        if (tags.leisure === "amusement_arcade" || tags.amenity === "arcade") return "arcade";
+        if (tags.leisure === "spa") return "spa";
+        if (tags.tourism === "museum") return "museum";
+        if (tags.tourism === "gallery") return "gallery";
+        if (tags.tourism === "zoo") return "zoo";
+        if (tags.tourism === "aquarium") return "aquarium";
+        if (tags.tourism === "attraction") return "attraction";
+        if (tags.leisure === "park") return "park";
+        return null;
       })();
+      if (!category) return null;
 
       // optional image url from tags
       let imageUrl: string | undefined;
-      const tagImage = el.tags?.image || el.tags?.["image:0"];
-      const commons = el.tags?.wikimedia_commons;
+      const tagImage = tags.image || tags["image:0"];
+      const commons = tags.wikimedia_commons;
       if (typeof tagImage === "string" && /^https?:\/\//i.test(tagImage)) {
         imageUrl = tagImage;
       } else if (typeof commons === "string" && commons.length > 0) {
         const title = encodeURIComponent(String(commons).replace(/^File:/i, ""));
         imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${title}`;
       }
+
+      const openStatus = parseOpeningHoursSimple(tags.opening_hours, now);
 
       return {
         id: String(el.id),
@@ -86,8 +171,9 @@ function parseElements(elements: any[]): POI[] {
         lon,
         category,
         imageUrl,
-        address: el.tags?.["addr:street"]
-          ? `${el.tags?.["addr:street"]} ${el.tags?.["addr:housenumber"] || ""}`.trim()
+        openStatus,
+        address: tags["addr:street"]
+          ? `${tags["addr:street"]} ${tags["addr:housenumber"] || ""}`.trim()
           : undefined,
       } as POI;
     })

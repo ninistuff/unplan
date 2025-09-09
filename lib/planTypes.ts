@@ -3,9 +3,17 @@ export type LatLng = { lat: number; lon: number };
 export type POI = LatLng & {
   id: string;
   name: string;
-  category: "cafe" | "bar" | "cinema" | "museum" | "park";
+  category:
+    | "cafe" | "restaurant" | "fast_food" | "tea_room"
+    | "bar" | "pub"
+    | "cinema" | "library" | "museum" | "gallery"
+    | "zoo" | "aquarium" | "attraction"
+    | "fitness_centre" | "sports_centre" | "bowling_alley" | "escape_game" | "swimming_pool" | "climbing_indoor"
+    | "arcade" | "karaoke" | "spa"
+    | "park";
   address?: string;
   imageUrl?: string;
+  openStatus?: "open" | "closed" | "unknown";
 };
 
 export type PlanStep =

@@ -6,6 +6,8 @@ type WeatherData = {
   city: string;
   temperature: number; // °C
   condition: "sunny" | "cloudy" | "rainy";
+  lat: number;
+  lon: number;
 };
 
 export function useWeather() {
@@ -47,6 +49,8 @@ export function useWeather() {
           city,
           temperature: Math.round(Number(cw.temperature)),
           condition,
+          lat,
+          lon,
         });
       } catch {
         // ignorăm erorile pentru prototip

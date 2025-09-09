@@ -1,0 +1,38 @@
+flowchart TD
+  subgraph Home
+    H[app/index.tsx]
+    UW[hooks/useWeather.ts]
+    LS[lib/locationService.ts]
+  end
+
+  subgraph Results
+    R[app/results.tsx]
+    GR[utils/generatePlansReal.ts]
+  end
+
+  subgraph Surse de date
+    OM[(Open‑Meteo API)]
+    OV[(OSM Overpass)]
+  end
+
+  subgraph Hartă
+    PD("app/plan/[id].tsx")
+    MAP[web/mapHtml.ts]
+  end
+
+  H -->|colectează UI + lat,lon + oraș + vreme + ora locală| H
+  H -->|apelează| UW
+  H -->|apelează| LS
+  UW -->|lat,lon + city + weather| H
+  LS -->|lat,lon fallback cached| H
+
+  H -->|Link /results?params + lat,lon + city + localTime + forecast| R
+  R -->|normalizează/validează| R
+  R -->|pornește generatorul<br/>params + lat/lon + vreme + ora| GR
+  GR -->|interoghează| OV
+  GR -->|aplică reguli<br/>durată/transport/buget<br/>cu cine/vreme/oră/opening_hours| R
+  R -->|afișează 3 planuri| R
+  R -->|deschide hartă cu plan| PD
+  PD -->|injectează payload| MAP
+  MAP -->|tile OSM + nume reale| PD
+

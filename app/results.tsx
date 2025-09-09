@@ -2,13 +2,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GestureResponderEvent, InteractionManager, PanResponder, PanResponderGestureState, Platform, Pressable, SafeAreaView, ScrollView, Share, Text, View } from "react-native";
+import { InteractionManager, Platform, Pressable, SafeAreaView, ScrollView, Share, Text, View } from "react-native";
 import { useAuth } from "../lib/auth";
 import { keyForPlan, useFavorites } from "../lib/favorites";
 import { t } from "../lib/i18n";
 import type { GenerateOptions, Plan } from "../lib/planTypes";
 
-import { generatePlans } from "../utils/generatePlansSimple";
+import { generatePlans } from "../utils/generatePlansReal";
 
 // Simplified imports for stability
 // import { useErrorHandler } from "../lib/errorHandler";
@@ -512,28 +512,12 @@ export default function ResultsScreen() {
 
 
       {plans.map((p, idx) => {
-        const pan = PanResponder.create({
-          onMoveShouldSetPanResponder: (_e: GestureResponderEvent, g: PanResponderGestureState) => Math.abs(g.dx) > 18 && Math.abs(g.dy) < 12,
-          onPanResponderRelease: async (_e: GestureResponderEvent, g: PanResponderGestureState) => {
-            if (g.dx < -60 && Math.abs(g.dy) < 30) {
-              try {
-                const res = await generatePlans({ ...options, shuffle: true });
-                if (!res || res.length === 0) return;
-                const currentPlans = plans;
-                const next = [...currentPlans];
-                const prevStops = (currentPlans[idx]?.stops || []).map((s: any) => s.name).join("|");
-                const candidate = res.find((pp) => (pp.stops || []).map((s: any) => s.name).join("|") !== prevStops) || res[0];
-                next[idx] = candidate;
-                setPlans(next);
-              } catch {}
-            }
-          },
-        });
+        // Swipe-to-shuffle dezactivat pentru a respecta regula: o singur3 rulare / set parametri
         const isFav = favs.keys.has(keyForPlan(p));
         const theme = getPlanTheme(String(p.id) || String.fromCharCode(65 + (idx % 3)));
 
         return (
-          <Card key={String(p.id ?? idx)} panHandlers={pan.panHandlers}>
+          <Card key={String(p.id ?? idx)}>
             {/* Enhanced Header with Theme */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <View style={{

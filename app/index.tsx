@@ -475,6 +475,13 @@ export default function Home() {
     params.fg = familyGrandparents ? "1" : "0";
     params.fa = familyDisabilities ? "1" : "0";
     params.ca = String(childAge || 0);
+    // Include loca1bie + meteo + ora local03
+    if (weather?.lat != null && weather?.lon != null) {
+      params.lat = String(weather.lat);
+      params.lon = String(weather.lon);
+    }
+    if (weather?.city) params.city = weather.city;
+    params.lt = new Date().toISOString();
     return params;
   }
 
