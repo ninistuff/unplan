@@ -37,3 +37,17 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+.env
+.env.*
+*.keystore
+*.apk
+*.aab
+*.ipa
+android/app/*.keystore
+android/keystores/
+ios/Pods/
+.expo-shared
+build/
+coverage/
+*.log
