@@ -168,6 +168,7 @@ export default function ResultsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState<string>("");
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   // Simple toast implementation
   const [toastMessage, setToastMessage] = useState<string>('');
@@ -255,6 +256,16 @@ export default function ResultsScreen() {
       await new Promise(resolve => setTimeout(resolve, 150));
 
       setCurrentStep(currentUserLang === 'ro' ? "Generez planuri..." : "Generating plans...");
+
+      // Debug logging pentru parametrii specificați
+      const debugParams = `Duration: ${currentOptions.duration}min, Transport: ${currentOptions.transport}, WithWho: ${currentOptions.withWho}, Budget: ${currentOptions.budget}`;
+      console.log('[Results] 🔍 Debug params:', debugParams);
+      setDebugInfo(debugParams);
+
+      if (currentOptions.duration === 120 && currentOptions.transport === 'walk' && currentOptions.withWho === 'friends' && currentOptions.budget === 200) {
+        console.log('[Results] 🎯 EXACT MATCH: 2h, walk, friends, 200 lei');
+        setDebugInfo(prev => prev + ' | 🎯 EXACT MATCH');
+      }
 
       // Generate
       const startGen = Date.now();
@@ -415,6 +426,13 @@ export default function ResultsScreen() {
           <Text style={{ fontSize: 14, color: "#666", textAlign: "center", paddingHorizontal: 20 }}>
             {lang === 'ro' ? 'Creez planuri personalizate pentru tine...' : 'Creating personalized plans for you...'}
           </Text>
+
+          {/* Debug Info */}
+          {debugInfo && (
+            <Text style={{ fontSize: 12, color: "#999", textAlign: "center", paddingHorizontal: 20, marginTop: 8 }}>
+              🔍 {debugInfo}
+            </Text>
+          )}
         </View>
 
         {/* Skeleton Cards */}

@@ -36,15 +36,16 @@ function stopsByDuration(mins: number) {
   return 6;
 }
 
-// Durată implicită pe activitate (minute)
+// Durată implicită pe activitate (minute) - redusă pentru 2h
 function defaultDuration(category: string): number {
   switch (category) {
-    case "cinema": return 110;
-    case "museum": return 45;
-    case "park": return 40;
-    case "bar": return 60;
-    case "cafe": return 50;
-    default: return 45;
+    case "cinema": return 90; // redus de la 110
+    case "museum": return 35; // redus de la 45
+    case "park": return 30; // redus de la 40
+    case "bar": return 45; // redus de la 60
+    case "cafe": return 35; // redus de la 50
+    case "restaurant": return 40;
+    default: return 35; // redus de la 45
   }
 }
 
@@ -87,16 +88,17 @@ function modeFromTransport(t?: GenerateOptions["transport"]): Plan["mode"] {
 }
 
 function radiusFor(transport: GenerateOptions["transport"], duration: number): number {
-  // în oraș, în funcție de mod + durată
-  if (transport === "walk") return Math.min(3000, 800 + duration * 8);
+  // în oraș, în funcție de mod + durată - relaxat pentru 2h pe jos
+  if (transport === "walk") return Math.min(4000, 1200 + duration * 12); // mărit pentru 2h
   if (transport === "bike") return Math.min(8000, 1500 + duration * 15);
   if (transport === "public") return Math.min(12000, 2500 + duration * 20);
   if (transport === "car") return Math.min(15000, 3000 + duration * 20);
-  return 3000;
+  return 4000;
 }
 
 function withinSegmentLimit(transport: GenerateOptions["transport"], meters: number) {
-  if (transport === "walk") return meters <= 1500;
+  // relaxat pentru 2h pe jos - permitem segmente mai lungi
+  if (transport === "walk") return meters <= 2500; // mărit de la 1500
   if (transport === "bike") return meters <= 5000;
   if (transport === "public") return meters <= 12000;
   if (transport === "car") return meters <= 20000;
@@ -115,6 +117,13 @@ function pick<T>(arr: T[], n: number): T[] {
 
 export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal): Promise<Plan[]> {
   if (signal?.aborted) return [];
+
+  console.log('[Generator] 🚀 Starting with options:', opts);
+
+  // Test special pentru debugging - parametrii specificați
+  if (opts.duration === 120 && opts.transport === 'walk' && opts.withWho === 'friends' && opts.budget === 200) {
+    console.log('[Generator] 🔍 DEBUGGING MODE: 2h, walk, friends, 200 lei');
+  }
 
   // 1) Locație curentă (preferă coordonate primite din Home)
   let center: LatLng = opts.center || { lat: 44.4268, lon: 26.1025 }; // fallback: București
@@ -144,21 +153,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
   let selectedPois: POI[] = [];
   let statsSummary = { raw: 0, filtered: 0, afterWho: 0, radius: initialRad, requireOpen };
 
-  const categoriesWanted = ((): string[] => {
-    const preferIndoor = wx.rainSoon || wx.hot;
-    const who = opts.withWho || "friends";
-    if (preferIndoor) {
-      if (who === "family") return ["museum","cafe","cinema"];
-      if (who === "partner") return ["cafe","museum","cinema"];
-      if (who === "pet") return ["park","cafe"]; // doar dacă evident pet-friendly
-      return ["cafe","bar","cinema"];
-    } else {
-      if (who === "family") return ["park","museum","cafe"];
-      if (who === "partner") return ["cafe","park","museum"];
-      if (who === "pet") return ["park","cafe"];
-      return ["park","cafe","bar"];
-    }
-  })();
+  const categoriesWanted = ["cafe","restaurant","bar","park","cinema"]
 
   for (let attempt = 0; attempt < radiusAttempts.length; attempt++) {
     if (signal?.aborted) return [];
@@ -197,18 +192,21 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
       .map(x => x.p.name);
     console.log('[Generator] Overpass stats', { center, ...statsSummary });
     console.log('[Generator] Sample POIs:', nearest);
+  console.log('[Generator] Selected POIs count:', selectedPois.length);
   } catch {}
 
   // Filtrări de bază: nume reale (parser face deja), distanță segmentată după transport
   // Vom grupa planurile în jurul unui prim POI (ancoră) pentru a respecta segmentele scurte
 
-  // 4) Decide număr opriri + timp pe drum
-  const desiredStops = stopsByDuration(opts.duration);
-  const maxTravelShare = 0.30; // 25–35%: aleg vârf mediu
+  // 4) Decide număr opriri + timp pe drum - relaxat pentru 2h
+  const desiredStops = Math.max(1, stopsByDuration(opts.duration)); // minim 1 oprire
+  const maxTravelShare = opts.duration <= 150 ? 0.40 : 0.30; // mai mult timp pe drum pentru durate scurte
   const maxTravelMin = Math.floor(opts.duration * maxTravelShare);
 
   const mode = modeFromTransport(opts.transport);
   const transport = opts.transport || "walk";
+
+  console.log('[Generator] Config: desired stops:', desiredStops, 'max travel:', maxTravelMin, 'min, transport:', transport);
 
   // 5) Heuristici categorie după "cu cine" și vreme — deja determinate în categoriesWanted
   function pickCategories(): string[] {
@@ -221,31 +219,61 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     let usedIds = new Set<string>();
     let travelMin = 0; let visitMin = 0;
 
+    console.log(`[Itinerary] Building for ${opts.duration}min, transport: ${transport}, maxTravel: ${maxTravelMin}min`);
+
     // alege un POI de start (prima oprire) cât mai aproape de anchor
     const byDist = selectedPois
       .map(p => ({ p, d: hav(anchor, { lat: p.lat, lon: p.lon }) }))
       .sort((a,b) => a.d - b.d)
       .map(x => x.p);
 
+    console.log(`[Itinerary] Available POIs: ${byDist.length}, categories wanted: ${cats.join(',')}`);
+
     for (const cat of cats) {
       const candidate = byDist.find(p => p.category === (cat as any) && !usedIds.has(p.id));
-      if (!candidate) continue;
+      if (!candidate) {
+        console.log(`[Itinerary] ❌ No candidate for category: ${cat}`);
+        continue;
+      }
+
       // travel time de la anchor sau de la ultimul
       const last = results.length ? results[results.length-1] : null;
       const from = last ? { lat: last.lat, lon: last.lon } : anchor;
       const dist = hav(from, { lat: candidate.lat, lon: candidate.lon });
-      if (!withinSegmentLimit(transport, dist)) continue;
       const segMin = travelMinutes(dist, mode);
       const stopMin = defaultDuration(candidate.category);
-      if (travelMin + segMin + visitMin + stopMin > opts.duration) break;
+      const newTotalTravel = travelMin + segMin;
+      const newTotalTime = newTotalTravel + visitMin + stopMin;
+
+      console.log(`[Itinerary] Checking ${candidate.name} (${cat}): dist=${Math.round(dist)}m, segMin=${segMin}, stopMin=${stopMin}, totalTime=${newTotalTime}/${opts.duration}`);
+
+      if (!withinSegmentLimit(transport, dist)) {
+        console.log(`[Itinerary] ❌ ${candidate.name}: segment too long (${Math.round(dist)}m > limit)`);
+        continue;
+      }
+
+      if (newTotalTime > opts.duration) {
+        console.log(`[Itinerary] ❌ ${candidate.name}: total time exceeds duration (${newTotalTime} > ${opts.duration})`);
+        break;
+      }
+
       travelMin += segMin; visitMin += stopMin;
       results.push({ name: candidate.name, lat: candidate.lat, lon: candidate.lon, category: candidate.category });
       usedIds.add(candidate.id);
+      console.log(`[Itinerary] ✅ Added ${candidate.name}: travel=${travelMin}min, visit=${visitMin}min`);
+
       if (results.length >= desiredStops) break;
     }
 
-    if (!results.length) return null;
+    console.log(`[Itinerary] Built ${results.length} stops, travel: ${travelMin}min, visit: ${visitMin}min`);
+
+    if (!results.length) {
+      console.log(`[Itinerary] ❌ No valid stops found`);
+      return null;
+    }
+
     if (travelMin > maxTravelMin) {
+      console.log(`[Itinerary] ⚠️ Travel time ${travelMin} > ${maxTravelMin}, trimming...`);
       // taie din coadă până încape
       while (results.length > 1 && travelMin > maxTravelMin) {
         const removed = results.pop()!;
@@ -255,10 +283,16 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
         const dist = hav(from, { lat: removed.lat, lon: removed.lon });
         travelMin -= travelMinutes(dist, mode);
         visitMin -= defaultDuration(removed.category);
+        console.log(`[Itinerary] Removed ${removed.name}, new travel: ${travelMin}min`);
       }
     }
 
-    if (visitMin <= 0) return null;
+    if (visitMin <= 0) {
+      console.log(`[Itinerary] ❌ No visit time left`);
+      return null;
+    }
+
+    console.log(`[Itinerary] ✅ Final: ${results.length} stops, ${travelMin}min travel, ${visitMin}min visit`);
     return { steps: results, travelMin, visitMin };
   }
 
