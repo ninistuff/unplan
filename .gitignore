@@ -53,3 +53,6 @@ coverage/
 *.log
 
 !.env.example
+
+debug-test.html
+test-generator.js
