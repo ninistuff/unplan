@@ -11,7 +11,7 @@ import type { GenerateOptions, Plan } from "../lib/planTypes";
 import { generatePlans } from "../utils/generatePlansReal";
 
 type LatLon = { lat: number; lon: number }
-type ResultStep = LatLon & { id?: string; name?: string; [k: string]: unknown }
+type ResultStep = Partial<LatLon> & { coord?: LatLon; id?: string; name?: string; [k: string]: unknown }
 type ResultPlan = { steps: ResultStep[]; [k: string]: unknown }
 
 // Simplified imports for stability
@@ -59,7 +59,10 @@ export default function ResultsScreen() {
   const cancelledRef = useRef(false);
   const requestKeyRef = useRef<string>("");
   const [timeoutBanner, setTimeoutBanner] = useState(false);
-  const [debugRes, setDebugRes] = useState<any[]>([]);
+  const [debugRes, setDebugRes] = useState<ResultPlan[]>([]);
+
+
+  const [plans, setPlans] = useState<Plan[]>([]);
 
 
   type Params = {
@@ -169,7 +172,6 @@ export default function ResultsScreen() {
   const [debugVisible, setDebugVisible] = useState(false);
 
   // Back to simple local state for stability
-  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -279,9 +281,9 @@ export default function ResultsScreen() {
       const resRaw = await generatePlans(currentOptions, sig);
       console.log('[Results] got plans from Real:', resRaw?.length, resRaw?.map(p => p.steps.length));
 
-      const arr = Array.isArray(resRaw) ? resRaw : [];
+      const arr = Array.isArray(resRaw) ? resRaw : []
       setPlans(arr);
-      setDebugRes(arr);
+      setDebugRes(arr as unknown as ResultPlan[]);
 
       const genMs = Date.now() - startGen;
       // Move progress to 85% only after generation step completes or aborts
