@@ -1,7 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import fs from 'fs';
 
-const file = path.join(__dirname, '..', 'app', 'index.tsx');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const file = dirname(__dirname) + '/app/index.tsx';
 let src = fs.readFileSync(file, 'utf8');
 
 // Ensure i18n + auth imports

@@ -1,7 +1,9 @@
-﻿const fs = require('fs');
-const path = require('path');
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import fs from 'fs';
 
-const file = path.join(__dirname, '..', 'app', 'results.tsx');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const file = dirname(__dirname) + '/app/results.tsx';
 let src = fs.readFileSync(file, 'utf8');
 
 // Ensure import t exists (already added earlier, but keep idempotent)
