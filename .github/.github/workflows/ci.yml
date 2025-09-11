@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npx tsc --noEmit
+      - run: npx eslint . --ext .ts,.tsx --no-error-on-unmatched-pattern
+      - run: npx madge app --extensions ts,tsx --ts-config tsconfig.json --circular
+      - run: npx depcheck --ignores "expo,expo-*,@expo*,react-native,react-native-*,@react-navigation*,@types/*,metro-*,babel-*,@babel/*,jest*,ts-node,react-dom" || true
