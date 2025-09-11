@@ -29,9 +29,8 @@ import Icon from "./_components/Icon";
 // Header cu profil + vreme integrat în această pagină
 // removed progress header bar
 import { radii, shadows, spacing } from "../constants/theme";
-
-type Transport = "walk" | "public" | "car" | "bike";
-type WithWho = "friends" | "pet" | "family" | "partner";
+import { Transport, WithWho } from "../lib/planTypes";
+import { AppTheme } from "../lib/theme";
 
 function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
@@ -59,7 +58,7 @@ type SliderProps = {
   onDragEnd?: () => void;
   onChangeEnd?: (v: number) => void;
   setParentScrollEnabled?: (enabled: boolean) => void; // NEW
-  theme: any;
+  theme: AppTheme;
 };
 
 function Slider({min, max, step = 1, value, onChange, disabled, markers, onDragStart, onDragEnd, onChangeEnd, setParentScrollEnabled, theme
@@ -272,7 +271,7 @@ function Slider({min, max, step = 1, value, onChange, disabled, markers, onDragS
   );
 }
 
-function Chip({ label, active, onPress, disabled, theme }: { label: string; active?: boolean; onPress?: () => void; disabled?: boolean; theme: any }) {
+function Chip({ label, active, onPress, disabled, theme }: { label: string; active?: boolean; onPress?: () => void; disabled?: boolean; theme: AppTheme }) {
   return (
     <Pressable
       onPress={disabled ? undefined : onPress}
@@ -293,7 +292,7 @@ function Chip({ label, active, onPress, disabled, theme }: { label: string; acti
   );
 }
 
-function OptionCard({ title, icon, active, onPress, theme }: { title: string; icon: string; active?: boolean; onPress?: () => void; theme: any }) {
+function OptionCard({ title, icon, active, onPress, theme }: { title: string; icon: string; active?: boolean; onPress?: () => void; theme: AppTheme }) {
   return (
     <Pressable
       onPress={onPress}
@@ -315,7 +314,7 @@ function OptionCard({ title, icon, active, onPress, theme }: { title: string; ic
   );
 }
 
-function CompactButton({ iconName, active, onPress, theme }: { iconName: any; active?: boolean; onPress?: () => void; theme: any }) {
+function CompactButton({ iconName, active, onPress, theme }: { iconName: any; active?: boolean; onPress?: () => void; theme: AppTheme }) {
   const size = 68;
   return (
     <Pressable
@@ -339,14 +338,14 @@ function CompactButton({ iconName, active, onPress, theme }: { iconName: any; ac
 }
 
 // Folosim Ionicons ca fallback până adăugăm setul nostru de SVG/PNG custom
-const transportOptions: Array<{ key: Transport; title: string; iconName: any }> = [
+const transportOptions: Array<{ key: Transport; title: string; iconName: string }> = [
   { key: "walk",   title: "Pe jos",            iconName: "walk-outline" },
   { key: "public", title: "Transport public",  iconName: "bus-outline" },
   { key: "car",    title: "Mașina",            iconName: "car-outline" },
   { key: "bike",   title: "Bicicletă",         iconName: "bicycle-outline" },
 ];
 
-const withOptions: Array<{ key: WithWho; title: string; iconName: any }> = [
+const withOptions: Array<{ key: WithWho; title: string; iconName: string }> = [
   { key: "friends",  title: "Cu prietenii", iconName: "people-outline" },
   { key: "family",   title: "Cu familia",   iconName: "family-custom" },
   { key: "partner",  title: "Partenerul/a", iconName: "date-custom" },
@@ -461,7 +460,7 @@ export default function Home() {
   );
 
   function buildParams() {
-    const params: any = {
+    const params: Record<string, string> = {
       d: String(duration),
       t: transport,
       w: withWho,
