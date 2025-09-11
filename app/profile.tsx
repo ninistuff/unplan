@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TextInputProps, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, UserProfile } from "../lib/auth";
 import { t } from "../lib/i18n";
@@ -445,7 +445,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function LabeledInput({ label, inputRef, ...props }: any) {
+function LabeledInput({ label, inputRef, ...props }: { label: string; inputRef?: React.RefObject<TextInput> } & TextInputProps) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={{ fontWeight: "600" }}>{label}</Text>

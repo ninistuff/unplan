@@ -17,6 +17,14 @@ export interface ThemeColors {
   overlay: string;
 }
 
+export type AppTheme = {
+  colors: ThemeColors;
+  textSizes: TextSizes;
+  spacing: typeof spacing;
+  radii: typeof radii;
+  shadows: typeof shadows;
+};
+
 export interface TextSizes {
   xs: number;
   sm: number;
@@ -150,7 +158,7 @@ export function getColors(themeMode: ThemeMode): ThemeColors {
 }
 
 // Create complete theme
-export function createTheme(themeMode: ThemeMode, textSize: TextSize): Theme {
+export function createTheme(themeMode: ThemeMode, textSize: TextSize): AppTheme {
   return {
     colors: getColors(themeMode),
     textSizes: getTextSizes(textSize),
