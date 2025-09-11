@@ -10,10 +10,15 @@ import type { GenerateOptions, Plan } from "../lib/planTypes";
 
 import { generatePlans } from "../utils/generatePlansReal";
 
+type LatLon = { lat: number; lon: number }
+type ResultStep = LatLon & { id?: string; name?: string; [k: string]: unknown }
+type ResultPlan = { steps: ResultStep[]; [k: string]: unknown }
+
 // Simplified imports for stability
 // import { useErrorHandler } from "../lib/errorHandler";
 // import { measureAsync } from "../lib/performanceMonitor";
 // import { planActions, useAppError, useLoadingStates, usePlans } from "../lib/store";
+
 
 function clampNum(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
