@@ -54,6 +54,7 @@ export default function ResultsScreen() {
   const cancelledRef = useRef(false);
   const requestKeyRef = useRef<string>("");
   const [timeoutBanner, setTimeoutBanner] = useState(false);
+  const [debugRes, setDebugRes] = useState<any[]>([]);
 
 
   type Params = {
@@ -269,7 +270,14 @@ export default function ResultsScreen() {
 
       // Generate
       const startGen = Date.now();
+      console.log('[Results] using generatePlansReal');
       const resRaw = await generatePlans(currentOptions, sig);
+      console.log('[Results] got plans from Real:', resRaw?.length, resRaw?.map(p => p.steps.length));
+
+      const arr = Array.isArray(resRaw) ? resRaw : [];
+      setPlans(arr);
+      setDebugRes(arr);
+
       const genMs = Date.now() - startGen;
       // Move progress to 85% only after generation step completes or aborts
       setGenerationProgress(85);
@@ -277,13 +285,13 @@ export default function ResultsScreen() {
       if (requestKeyRef.current !== normalizedLink) return;
 
       // Shuffle step
-      const res = (params.shuffle === '1' && seed != null) ? seededShuffle(resRaw, seed) : resRaw;
+      const res = (params.shuffle === '1' && seed != null) ? seededShuffle(arr, seed) : arr;
 
       setCurrentStep(currentUserLang === 'ro' ? "Finalizez..." : "Finalizing...");
       setGenerationProgress(100);
 
-      // Finalize step
-      setPlans(res);
+      // Finalize step - already set above
+      // setPlans(res);
 
       // Success toast
       setToastMessage(currentUserLang === 'ro' ? '🎉 Planuri generate cu succes!' : '🎉 Plans generated successfully!');
@@ -459,8 +467,37 @@ export default function ResultsScreen() {
     );
   }
 
-  const hasAnyPoiStops = (plans || []).some(p => (p.steps || []).some((s: any) => s.kind === 'poi'));
-  if (!plans || plans.length === 0 || !hasAnyPoiStops) {
+  console.log('[Results] plans:', plans?.length, plans?.map(p => p.steps.length));
+
+  const valid = plans
+    ? plans.filter(p => p.steps && p.steps.length >= 1)
+    : [];
+
+  // DEBUG START
+  if (valid && valid.length > 0) {
+    console.log('[Results] debug plans:', valid.map(p => p.steps.length))
+    return (
+      <ScrollView style={{ padding: 16 }}>
+        {valid.map((p, i) => (
+          <View key={i} style={{ marginBottom: 16 }}>
+            <Text>Plan {i + 1} • {p.steps.length} opriri</Text>
+            {p.steps.map((s: any, j: number) => (
+              <Text key={j}>• {s.kind} {s.poi?.name || ''}</Text>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
+    )
+  }
+  // DEBUG END
+
+  const shown = Array.isArray(plans)
+    ? plans.filter(p => (p.steps || []).some(s => s.kind === 'poi'))
+    : [];
+
+  console.log('[Results] will render', shown.map(p => p.steps.length));
+
+  if (shown.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16, gap: 16 }}>
         <Text style={{ textAlign: "center" }}>{lang==='ro' ? 'Nu avem opriri valide' : 'No valid stops'}</Text>
@@ -543,7 +580,7 @@ export default function ResultsScreen() {
       )}
 
 
-      {plans.map((p, idx) => {
+      {shown.map((p, idx) => {
         // Swipe-to-shuffle dezactivat pentru a respecta regula: o singur3 rulare / set parametri
         const isFav = favs.keys.has(keyForPlan(p));
         const theme = getPlanTheme(String(p.id) || String.fromCharCode(65 + (idx % 3)));

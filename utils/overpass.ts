@@ -1,6 +1,29 @@
+// Tipuri Overpass
+export type OverpassElementType = 'node' | 'way' | 'relation'
+
+export interface OverpassCenter {
+  lat: number
+  lon: number
+}
+
+export interface OverpassElement {
+  type: OverpassElementType
+  id: number
+  lat?: number
+  lon?: number
+  center?: OverpassCenter
+  tags?: Record<string, string>
+  nodes?: number[]
+  geometry?: Array<{ lat: number; lon: number }>
+}
+
+export interface OverpassResponse {
+  elements: OverpassElement[]
+}
+
 // utils/overpass.ts
-import type { POI } from "../lib/planTypes";
-import { fetchWithTimeout } from "./fetchWithTimeout";
+import type { POI } from "../lib/planTypes"
+import { fetchWithTimeout } from "./fetchWithTimeout"
 
 const ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
@@ -97,7 +120,8 @@ async function callOverpass(body: string, externalSignal?: AbortSignal) {
           externalSignal,
         });
         if (!res.ok) throw new Error(`Overpass ${res.status}`);
-        return await res.json();
+        const data: OverpassResponse = await res.json() 
+        return data
       } catch (e) {
         lastErr = e;
         if (externalSignal?.aborted) throw e;
@@ -358,6 +382,7 @@ export async function fetchTransitShapesFromStop(
         let bestNode: any = null;
         let bd = Infinity;
         for (const n of nodes) {
+          if (n.lat == null || n.lon == null) continue
           const d = hav(dest, { lat: n.lat, lon: n.lon });
           if (d < bd) {
             bd = d;
