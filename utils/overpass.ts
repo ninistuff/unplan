@@ -1,4 +1,8 @@
 // Tipuri Overpass
+// utils/overpass.ts
+import type { POI } from "../lib/planTypes"
+import { fetchWithTimeout } from "./fetchWithTimeout"
+
 export type OverpassElementType = 'node' | 'way' | 'relation'
 
 export interface OverpassCenter {
@@ -14,16 +18,12 @@ export interface OverpassElement {
   center?: OverpassCenter
   tags?: Record<string, string>
   nodes?: number[]
-  geometry?: Array<{ lat: number; lon: number }>
+  geometry?: { lat: number; lon: number }[]
 }
 
 export interface OverpassResponse {
   elements: OverpassElement[]
 }
-
-// utils/overpass.ts
-import type { POI } from "../lib/planTypes"
-import { fetchWithTimeout } from "./fetchWithTimeout"
 
 const ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
@@ -229,7 +229,7 @@ export async function fetchPOIsAround(
       const parsed = parseElements(elements);
       if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
       all.push(...parsed);
-    } catch {
+    } catch { } {
       // skip a failing category; keep others
     }
   }
@@ -264,7 +264,7 @@ out center ${limitPerCat};`;
       const parsed = parseElements(elements);
       if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
       all.push(...parsed);
-    } catch {
+    } catch { } {
       // fall back per-category: use around bbox if city lookup fails for this category
       try {
         const fallback = await fetchPOIsAround(center, [cat], 3000, limitPerCat, signal, stats);
@@ -318,7 +318,7 @@ export async function fetchTransitShapesFromStop(
   kind: "bus" | "metro",
   dest: { lat: number; lon: number }
 ): Promise<{
-  shapes: Array<Array<{ lat: number; lon: number }>>;
+  shapes: { lat: number; lon: number }[][];
   alightStop?: { id: string; lat: number; lon: number; name?: string };
 } | null> {
   try {
@@ -353,7 +353,7 @@ export async function fetchTransitShapesFromStop(
       if (!ways.length) continue;
       let md = Infinity;
       for (const w of ways) {
-        const g = w.geometry as Array<{ lat: number; lon: number }>;
+        const g = w.geometry as { lat: number; lon: number }[];
         for (const pt of g) {
           const d = hav(dest, pt);
           if (d < md) md = d;
@@ -366,7 +366,7 @@ export async function fetchTransitShapesFromStop(
       }
     }
     if (!bestWays) return null;
-    const shapes = bestWays.map((w) => (w.geometry as Array<{ lat: number; lon: number }>).slice());
+    const shapes = bestWays.map((w) => (w.geometry as { lat: number; lon: number }[]).slice());
 
     // Try to find an official stop node (alighting) along this relation closest to dest
     let alightStop: { id: string; lat: number; lon: number; name?: string } | undefined;
