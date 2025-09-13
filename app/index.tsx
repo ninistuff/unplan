@@ -24,7 +24,7 @@ import { useAuth } from "../lib/auth";
 import { t } from "../lib/i18n";
 import { useTheme } from "../lib/ThemeProvider";
 import { buildWeatherMessage } from "../utils/weatherMessage";
-import Icon from "./_components/Icon";
+import Icon, { AppIconName } from "./_components/Icon";
 
 // Header cu profil + vreme integrat în această pagină
 // removed progress header bar
@@ -314,7 +314,7 @@ function OptionCard({ title, icon, active, onPress, theme }: { title: string; ic
   );
 }
 
-function CompactButton({ iconName, active, onPress, theme }: { iconName: any; active?: boolean; onPress?: () => void; theme: AppTheme }) {
+function CompactButton({ iconName, active, onPress, theme }: { iconName: AppIconName; active?: boolean; onPress?: () => void; theme: AppTheme }) {
   const size = 68;
   return (
     <Pressable
@@ -338,14 +338,14 @@ function CompactButton({ iconName, active, onPress, theme }: { iconName: any; ac
 }
 
 // Folosim Ionicons ca fallback până adăugăm setul nostru de SVG/PNG custom
-const transportOptions: Array<{ key: Transport; title: string; iconName: string }> = [
+const transportOptions: Array<{ key: Transport; title: string; iconName: AppIconName }> = [
   { key: "walk",   title: "Pe jos",            iconName: "walk-outline" },
   { key: "public", title: "Transport public",  iconName: "bus-outline" },
   { key: "car",    title: "Mașina",            iconName: "car-outline" },
   { key: "bike",   title: "Bicicletă",         iconName: "bicycle-outline" },
 ];
 
-const withOptions: Array<{ key: WithWho; title: string; iconName: string }> = [
+const withOptions: Array<{ key: WithWho; title: string; iconName: AppIconName }> = [
   { key: "friends",  title: "Cu prietenii", iconName: "people-outline" },
   { key: "family",   title: "Cu familia",   iconName: "family-custom" },
   { key: "partner",  title: "Partenerul/a", iconName: "date-custom" },
