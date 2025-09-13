@@ -229,7 +229,7 @@ export async function fetchPOIsAround(
       const parsed = parseElements(elements);
       if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
       all.push(...parsed);
-    } catch (_) {
+    } catch {
       // skip a failing category; keep others
     }
   }
@@ -264,7 +264,7 @@ out center ${limitPerCat};`;
       const parsed = parseElements(elements);
       if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
       all.push(...parsed);
-    } catch (_) {
+    } catch {
       // fall back per-category: use around bbox if city lookup fails for this category
       try {
         const fallback = await fetchPOIsAround(center, [cat], 3000, limitPerCat, signal, stats);
