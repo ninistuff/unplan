@@ -1,24 +1,23 @@
-﻿// app/index.tsx
+// app/index.tsx
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Link } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Animated,
-    Easing,
-    GestureResponderEvent,
-    Image,
-    LayoutChangeEvent,
-    PanResponder,
-    PanResponderGestureState,
-    PanResponderInstance,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    View
+  Animated,
+  Easing,
+  GestureResponderEvent,
+  Image,
+  LayoutChangeEvent,
+  PanResponder,
+  PanResponderGestureState,
+  PanResponderInstance,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useWeather } from "../hooks/useWeather";
 import { useAuth } from "../lib/auth";
 import { t } from "../lib/i18n";
@@ -36,10 +35,6 @@ function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
 
-function roundToStep(n: number, step = 1) {
-  return Math.round(n / step) * step;
-}
-
 function formatHM(mins: number) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
@@ -53,7 +48,7 @@ type SliderProps = {
   value: number;
   onChange: (v: number) => void;
   disabled?: boolean;
-  markers?: Array<{ value: number; label: string }>;
+  markers?: { value: number; label: string }[]
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onChangeEnd?: (v: number) => void;
@@ -74,7 +69,6 @@ function Slider({min, max, step = 1, value, onChange, disabled, markers, onDragS
   const startX = useRef(0);
 
   const thumbSize = 24;
-  const PADDING = 12; // must match track paddingHorizontal
 
   // pos = thumb CENTER relative to inner-left of track (after padding)
 
@@ -105,7 +99,7 @@ function Slider({min, max, step = 1, value, onChange, disabled, markers, onDragS
       useNativeDriver: false,
     }).start();
     lastVal.current = value;
-  }, [width, value, pos]);
+  }, [width, value, pos, valueToPos]);
 
   // layout on track: measure inner width (minus padding)
   const onTrackLayout = (e: LayoutChangeEvent) => {
@@ -292,28 +286,6 @@ function Chip({ label, active, onPress, disabled, theme }: { label: string; acti
   );
 }
 
-function OptionCard({ title, icon, active, onPress, theme }: { title: string; icon: string; active?: boolean; onPress?: () => void; theme: AppTheme }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        width: "48%",
-        marginHorizontal: "1%",
-        marginBottom: spacing.sm,
-        padding: spacing.lg,
-        borderRadius: radii.lg,
-        backgroundColor: theme.colors.surface,
-        borderWidth: 1,
-        borderColor: active ? theme.colors.accent : theme.colors.borderSoft,
-        ...(Platform.OS === 'android' ? { elevation: 2 } : { ...shadows.xs }),
-      }}
-    >
-      <Text style={{ fontSize: 24, marginBottom: 6 }}>{icon}</Text>
-      <Text style={{ fontSize: theme.textSizes.sm, fontWeight: "700", color: theme.colors.text }}>{title}</Text>
-    </Pressable>
-  );
-}
-
 function CompactButton({ iconName, active, onPress, theme }: { iconName: any; active?: boolean; onPress?: () => void; theme: AppTheme }) {
   const size = 68;
   return (
@@ -338,14 +310,14 @@ function CompactButton({ iconName, active, onPress, theme }: { iconName: any; ac
 }
 
 // Folosim Ionicons ca fallback până adăugăm setul nostru de SVG/PNG custom
-const transportOptions: Array<{ key: Transport; title: string; iconName: string }> = [
+const transportOptions: { key: Transport; title: string; iconName: string }[] = [
   { key: "walk",   title: "Pe jos",            iconName: "walk-outline" },
   { key: "public", title: "Transport public",  iconName: "bus-outline" },
   { key: "car",    title: "Mașina",            iconName: "car-outline" },
   { key: "bike",   title: "Bicicletă",         iconName: "bicycle-outline" },
 ];
 
-const withOptions: Array<{ key: WithWho; title: string; iconName: string }> = [
+const withOptions: { key: WithWho; title: string; iconName: string }[] = [
   { key: "friends",  title: "Cu prietenii", iconName: "people-outline" },
   { key: "family",   title: "Cu familia",   iconName: "family-custom" },
   { key: "partner",  title: "Partenerul/a", iconName: "date-custom" },
@@ -359,7 +331,6 @@ export default function Home() {
   const weekday = new Date().getDay();
   const { user, updateProfile } = useAuth();
   const lang = (user?.profile?.language ?? 'ro') as 'en' | 'ro';
-  const insets = useSafeAreaInsets();
 
   const onPickAvatar = async () => {
     try {
@@ -451,13 +422,6 @@ export default function Home() {
       </View>
     );
   }
-
-  const msg = buildWeatherMessage(
-    Math.round(weather.temperature),
-    weather.condition as any,
-    hour,
-    weekday
-  );
 
   function buildParams() {
     const params: Record<string, string> = {

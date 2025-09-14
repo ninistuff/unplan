@@ -49,7 +49,7 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 
 
 export default function ResultsScreen() {
-  const router = useRouter();
+  const _router = useRouter();
   const rawParams = useLocalSearchParams();
   const { user } = useAuth();
   const lang = (user?.profile?.language ?? 'en') as 'en' | 'ro';
@@ -59,7 +59,7 @@ export default function ResultsScreen() {
   const cancelledRef = useRef(false);
   const requestKeyRef = useRef<string>("");
   const [timeoutBanner, setTimeoutBanner] = useState(false);
-  const [debugRes, setDebugRes] = useState<ResultPlan[]>([]);
+  const [_debugRes, _setDebugRes] = useState<ResultPlan[]>([]);
 
 
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -283,7 +283,7 @@ export default function ResultsScreen() {
 
       const arr = Array.isArray(resRaw) ? resRaw : []
       setPlans(arr);
-      setDebugRes(arr as unknown as ResultPlan[]);
+      _setDebugRes(arr as unknown as ResultPlan[]);
 
       const genMs = Date.now() - startGen;
       // Move progress to 85% only after generation step completes or aborts
@@ -329,7 +329,7 @@ export default function ResultsScreen() {
       load();
     });
     return () => { (task as any)?.cancel?.(); };
-  }, [normalizedLink]);
+  }, [normalizedLink, load])
 
   // Debug panel content
   const DebugPanel = () => !debugVisible ? null : (
