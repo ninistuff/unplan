@@ -1,6 +1,6 @@
 // app/results.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { InteractionManager, Platform, Pressable, SafeAreaView, ScrollView, Share, Text, View } from "react-native";
 import { useAuth } from "../lib/auth";
@@ -10,46 +10,18 @@ import type { GenerateOptions, Plan } from "../lib/planTypes";
 
 import { generatePlans } from "../utils/generatePlansReal";
 
-type LatLon = { lat: number; lon: number }
-type ResultStep = Partial<LatLon> & { coord?: LatLon; id?: string; name?: string; [k: string]: unknown }
-type ResultPlan = { steps: ResultStep[]; [k: string]: unknown }
-
 // Simplified imports for stability
 // import { useErrorHandler } from "../lib/errorHandler";
 // import { measureAsync } from "../lib/performanceMonitor";
 // import { planActions, useAppError, useLoadingStates, usePlans } from "../lib/store";
-
-
-function clampNum(n: number, a: number, b: number) {
-  return Math.max(a, Math.min(b, n));
-}
 
 function formatHM(mins: number) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return h > 0 ? `${h}h ${m > 0 ? m + "min" : ""}`.trim() : `${m}min`;
 }
-function mulberry32(a: number) {
-  return function() {
-    let t = (a += 0x6D2B79F5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function seededShuffle<T>(arr: T[], seed: number): T[] {
-  const rand = mulberry32(seed >>> 0);
-  const copy = arr.slice();
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
 
 export default function ResultsScreen() {
-  const _router = useRouter();
   const rawParams = useLocalSearchParams();
   const { user } = useAuth();
   const lang = (user?.profile?.language ?? 'en') as 'en' | 'ro';
@@ -59,7 +31,6 @@ export default function ResultsScreen() {
   const cancelledRef = useRef(false);
   const requestKeyRef = useRef<string>("");
   const [timeoutBanner, setTimeoutBanner] = useState(false);
-  const [_debugRes, _setDebugRes] = useState<ResultPlan[]>([]);
 
 
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -276,23 +247,17 @@ export default function ResultsScreen() {
       }
 
       // Generate
-      const startGen = Date.now();
       console.log('[Results] using generatePlansReal');
       const resRaw = await generatePlans(currentOptions, sig);
       console.log('[Results] got plans from Real:', resRaw?.length, resRaw?.map(p => p.steps.length));
 
       const arr = Array.isArray(resRaw) ? resRaw : []
       setPlans(arr);
-      _setDebugRes(arr as unknown as ResultPlan[]);
 
-      const _genMs = Date.now() - startGen;
       // Move progress to 85% only after generation step completes or aborts
       setGenerationProgress(85);
       if (cancelledRef.current) return;
       if (requestKeyRef.current !== normalizedLink) return;
-
-      // Shuffle step
-      const _res = (params.shuffle === '1' && seed != null) ? seededShuffle(arr, seed) : arr;
 
       setCurrentStep(currentUserLang === 'ro' ? "Finalizez..." : "Finalizing...");
       setGenerationProgress(100);
@@ -320,7 +285,7 @@ export default function ResultsScreen() {
       setCurrentStep("");
       inFlight.current = false;
     }
-  }, [options, params.shuffle, seed, user?.profile?.language, lang]);
+  }, [options, normalizedLink, lang, user?.profile?.language]);
 
   useEffect(() => {
     if (inFlight.current) return;
