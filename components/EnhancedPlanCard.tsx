@@ -1,12 +1,9 @@
 // components/EnhancedPlanCard.tsx - Beautiful Plan Cards with Animations
-import React, { useRef, useEffect } from 'react';
-import { View, Text, Pressable, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Pressable, Text, View } from 'react-native';
 import type { Plan } from '../lib/planTypes';
-import { t } from '../lib/i18n';
-
-const { width } = Dimensions.get('window');
 
 interface Props {
   plan: Plan;
@@ -73,7 +70,7 @@ export default function EnhancedPlanCard({ plan, index, lang, onShuffle, isFavor
         useNativeDriver: true,
       }),
     ]).start();
-  }, [index]);
+  }, [index, fadeAnim, scaleAnim, slideAnim]);
   
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
