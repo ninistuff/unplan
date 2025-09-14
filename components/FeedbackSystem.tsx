@@ -1,9 +1,7 @@
 // components/FeedbackSystem.tsx - Enhanced User Feedback System
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Pressable, Text, View } from 'react-native';
-
-const { width } = Dimensions.get('window');
+import { Animated, Pressable, Text, View } from 'react-native';
 
 interface ToastProps {
   message: string;
@@ -36,7 +34,7 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
         useNativeDriver: true,
       }),
     ]).start(() => onHide());
-  }, [slideAnim, opacityAnim]);
+  }, [slideAnim, opacityAnim, onHide]);
   
   useEffect(() => {
     if (visible) {
@@ -240,7 +238,6 @@ export function ProgressRing({
 }: ProgressRingProps) {
   const animatedValue = useRef(new Animated.Value(0)).current;
   const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
   
   useEffect(() => {
     Animated.timing(animatedValue, {
@@ -248,7 +245,7 @@ export function ProgressRing({
       duration: 1000,
       useNativeDriver: false,
     }).start();
-  }, [progress]);
+  }, [progress, animatedValue]);
   
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>

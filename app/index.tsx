@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Link } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -73,11 +73,11 @@ function Slider({min, max, step = 1, value, onChange, disabled, markers, onDragS
   // pos = thumb CENTER relative to inner-left of track (after padding)
 
   // value -> normalized pos in [0..movable]
-  const valueToPos = (val: number, w: number) => {
+  const valueToPos = useCallback((val: number, w: number) => {
     const inner = Math.max(w, 1);
     const r = clamp((val - min) / Math.max(max - min, 1), 0, 1);
     return r * inner;
-  };
+  }, [min, max])
   // pos -> value
   const posToValue = (p: number, w: number) => {
     const inner = Math.max(w, 1);

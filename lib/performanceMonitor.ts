@@ -1,4 +1,5 @@
 // lib/performanceMonitor.ts - Performance Monitoring and Optimization
+import { useEffect, useRef } from 'react';
 import { appStore } from './store';
 
 // Performance metrics interface
@@ -298,7 +299,6 @@ export const measure = <T>(name: string, fn: () => T, metadata?: Record<string, 
   performanceMonitor.measure(name, fn, metadata);
 
 // React hook for performance monitoring
-import { useEffect, useRef } from 'react';
 
 export function usePerformanceMonitor(componentName: string) {
   const renderCount = useRef(0);

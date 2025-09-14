@@ -70,7 +70,7 @@ export default function EnhancedPlanCard({ plan, index, lang, onShuffle, isFavor
         useNativeDriver: true,
       }),
     ]).start();
-  }, [index, fadeAnim, scaleAnim, slideAnim]);
+  }, [index, fadeAnim, slideAnim, scaleAnim])
   
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
