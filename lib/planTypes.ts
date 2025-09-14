@@ -27,20 +27,20 @@ export type Plan = {
   steps: PlanStep[];     // Start -> ... -> ...
   mode: "foot" | "bike" | "driving";
   // New meta for cards
-  stops?: Array<{ name: string; lat?: number; lon?: number }>; // short list for UI
+  stops?: { name: string; lat?: number; lon?: number }[]; // short list for UI
   km?: number;
   min?: number;
   cost?: number;
   reason?: string;
-  routeSegments?: Array<{
+  routeSegments?: {
     from: LatLng;
     to: LatLng;
     kind: "foot" | "bike" | "driving" | "bus" | "metro";
     stopId?: string;
-    shape?: LatLng[][];
-    distance?: number; // in meters
-    duration?: number; // in seconds
-  }>;
+    shape?: LatLng[];
+    distance?: number;
+    duration?: number;
+  }[];
   // For Results card display: absolute nearest public transport boarding suggestion
   boarding?: { mode: "bus" | "metro"; name: string };
 };

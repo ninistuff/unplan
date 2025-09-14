@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Plan } from "./planTypes";
 
 const STORAGE_KEY = "plans:favorites:v1";
@@ -33,7 +33,7 @@ export function useFavorites() {
   useEffect(() => { (async () => setMap(await loadMap()))(); }, []);
 
   const keys = useMemo(() => new Set(Object.keys(map)), [map]);
-  const list = useMemo(() => Object.entries(map) as Array<[string, Plan]>, [map]);
+  const list = useMemo(() => Object.entries(map) as [string, Plan][], [map])
 
   const toggle = useCallback(async (p: Plan) => {
     const k = keyForPlan(p);
