@@ -237,7 +237,6 @@ export function ProgressRing({
   backgroundColor = '#E5E7EB'
 }: ProgressRingProps) {
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const radius = (size - strokeWidth) / 2;
   
   useEffect(() => {
     Animated.timing(animatedValue, {

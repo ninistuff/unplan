@@ -123,8 +123,7 @@ export async function planTransitViaOTP(
       if (pts && typeof pts === 'string') {
         try {
           shape = decodePolyline(pts);
-        } catch (e) {
-
+        } catch {
         }
       }
 

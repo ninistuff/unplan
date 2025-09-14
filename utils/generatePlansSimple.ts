@@ -40,7 +40,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
           locationPromise = Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.High,
           });
-        } catch (highAccuracyError) {
+        } catch {
 
           // Fallback: Use balanced accuracy
           locationPromise = Location.getCurrentPositionAsync({
@@ -61,8 +61,6 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
 
         // Check if location is too old (cached)
         const locationAge = Date.now() - loc.timestamp;
-        const locationAgeMinutes = Math.round(locationAge / (1000 * 60));
-
 
         if (locationAge > 5 * 60 * 1000) { // Older than 5 minutes
 
@@ -85,9 +83,8 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
               center = { lat: freshLoc.coords.latitude, lon: freshLoc.coords.longitude };
               console.log(`[GeneratePlans] Updated to fresh coordinates: ${center.lat}, ${center.lon}`);
             }
-          } catch (freshError) {
 
-          }
+          }catch { }
         }
 
 
@@ -117,11 +114,10 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
       } else {
 
       }
-    } catch (locationError) {
 
     }
+    catch { }
 
-    const mapsLink = `https://www.google.com/maps?q=${center.lat},${center.lon}`;
 
     // Simple transport mode mapping
     const mode: Plan["mode"] = opts.transport === "bike" ? "bike" :

@@ -6,7 +6,6 @@
  */
 
 const { execSync } = require('child_process');
-const path = require('path');
 
 // Test coordinates (Bucharest)
 const TEST_COORDS = {
@@ -86,7 +85,7 @@ if (otpUrl) {
         } else {
           console.log('   ⚠️  OTP response format unexpected');
         }
-      } catch (e) {
+      } catch (_e) {
         console.log('   ⚠️  OTP response is not valid JSON');
       }
     } else if (result.includes('HTTP_CODE:')) {
@@ -133,7 +132,6 @@ try {
   
   // Test routing decision logic
   const shouldUseMetro = distance > 5000;
-  const walkToStop = 200;
   const transitDistance = distance - 400;
   const transitSpeed = shouldUseMetro ? 25 : 15;
   const transitDuration = Math.round((transitDistance / 1000) * 3600 / transitSpeed);

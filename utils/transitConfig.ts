@@ -48,7 +48,7 @@ export function validateOTPUrl(url: string): { valid: boolean; error?: string } 
       return { valid: false, error: 'URL must use HTTP or HTTPS protocol' };
     }
     return { valid: true };
-  } catch (error) {
+  } catch {
     return { valid: false, error: 'Invalid URL format' };
   }
 }

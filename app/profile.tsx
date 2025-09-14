@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TextInputProps, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, UserProfile } from "../lib/auth";
 import { t } from "../lib/i18n";
@@ -445,19 +445,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function LabeledInput({ label, inputRef, ...props }: { label: string; inputRef?: React.RefObject<TextInput> } & TextInputProps) {
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={{ fontWeight: "600" }}>{label}</Text>
-      <TextInput
-        placeholder={label}
-        style={{ borderWidth: 1, borderColor: "#e5e7eb", paddingHorizontal: 12, paddingVertical: Platform.select({ ios: 12, default: 10 }), borderRadius: 8 }}
-        ref={inputRef}
-        {...props}
-      />
-    </View>
-  );
-}
 
 
 
@@ -472,32 +459,6 @@ function calcAge(iso: string) {
   const dd = today.getDate();
   if (mm < m || (mm === m && dd < d)) age--;
   return age;
-}
-
-function DobField({ lang, value, onChange }: { lang: 'en' | 'ro'; value?: string; onChange: (v: string)=>void }) {
-  const [show, setShow] = useState(false);
-  const current = value ? parseIso(value) : new Date(1995, 0, 1);
-  const label = value || `${t(lang,'dob')} (YYYY-MM-DD)`;
-  if (Platform.OS === 'web') {
-    return (
-      <LabeledInput label={`${t(lang,'dob')} (YYYY-MM-DD)`} value={value ?? ''} onChangeText={(v: string)=>onChange(v)} />
-    );
-  }
-  const onChangeNative = (_e: DateTimePickerEvent, d?: Date) => {
-    if (Platform.OS === 'android') setShow(false);
-    if (d) onChange(toIso(d));
-  };
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={{ fontWeight: '600' }}>{t(lang,'dob')}</Text>
-      <Pressable onPress={()=>setShow(true)} style={{ borderWidth: 1, borderColor: '#e5e7eb', paddingHorizontal: 12, paddingVertical: 12, borderRadius: 8 }}>
-        <Text>{label}</Text>
-      </Pressable>
-      {show ? (
-        <DateTimePicker value={current} mode="date" display={Platform.OS === 'ios' ? 'inline' : 'default'} onChange={onChangeNative} />
-      ) : null}
-    </View>
-  );
 }
 
 function toIso(d: Date) {
