@@ -1,4 +1,5 @@
 // lib/store.ts - Centralized State Management (Simple Implementation)
+import { useEffect, useState } from 'react';
 import type { LatLng, Plan, POI } from './planTypes';
 
 // Simple State Management without external dependencies
@@ -124,7 +125,6 @@ class AppStore {
 export const appStore = new AppStore();
 
 // React hooks for using the store
-import { useEffect, useState } from 'react';
 
 export function useAppState<T>(selector: (state: AppState) => T): T {
   const [value, setValue] = useState(() => selector(appStore.getState()));

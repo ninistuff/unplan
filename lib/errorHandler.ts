@@ -1,4 +1,5 @@
 // lib/errorHandler.ts - Centralized Error Handling
+import { useCallback } from 'react';
 import { appStore } from './store';
 
 // Error types
@@ -255,7 +256,6 @@ export const getUserErrorMessage = (error: any) =>
   errorHandler.getUserMessage(error);
 
 // React hook for error handling
-import { useCallback } from 'react';
 
 export function useErrorHandler() {
   const handleError = useCallback((error: any, context?: Record<string, any>) => {
