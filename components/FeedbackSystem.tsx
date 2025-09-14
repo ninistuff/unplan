@@ -1,7 +1,7 @@
 // components/FeedbackSystem.tsx - Enhanced User Feedback System
-import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, Animated, Pressable, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Pressable, Text, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -22,6 +22,21 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
     info: { bg: '#3B82F6', icon: 'information-circle' },
     warning: { bg: '#F59E0B', icon: 'warning' },
   };
+
+  const hideToast = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: -100,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => onHide());
+  }, [slideAnim, opacityAnim]);
   
   useEffect(() => {
     if (visible) {
@@ -46,22 +61,7 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
       
       return () => clearTimeout(timer);
     }
-  }, [visible]);
-  
-  const hideToast = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: -100,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => onHide());
-  };
+  }, [visible, hideToast, opacityAnim, slideAnim]);
   
   if (!visible) return null;
   
@@ -168,35 +168,35 @@ export function LoadingDots({ color = '#007AFF', size = 8 }: LoadingDotsProps) {
   const dot3 = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
-    const animate = () => {
-      const duration = 600;
-      const delay = 200;
-      
-      Animated.sequence([
+    const duration = 600
+    const delay = 200
+    
+    const doDots = () => {
+    
+    Animated.sequence([
         Animated.timing(dot1, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
-        Animated.timing(dot1, { toValue: 0, duration: duration / 2, useNativeDriver: true }),
-      ]).start();
+        Animated.timing(dot1, { toValue: 0, duration: duration / 2, useNativeDriver: true })
+    ]).start();
       
-      setTimeout(() => {
+    setTimeout(() => {
         Animated.sequence([
-          Animated.timing(dot2, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
-          Animated.timing(dot2, { toValue: 0, duration: duration / 2, useNativeDriver: true }),
-        ]).start();
-      }, delay);
+        Animated.timing(dot2, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
+        Animated.timing(dot2, { toValue: 0, duration: duration / 2, useNativeDriver: true })
+    ]).start()
+    }, delay)
       
-      setTimeout(() => {
+    setTimeout(() => {
         Animated.sequence([
-          Animated.timing(dot3, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
-          Animated.timing(dot3, { toValue: 0, duration: duration / 2, useNativeDriver: true }),
-        ]).start();
-      }, delay * 2);
-    };
+        Animated.timing(dot3, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
+        Animated.timing(dot3, { toValue: 0, duration: duration / 2, useNativeDriver: true })
+    ]).start()
+    }, delay * 2)
+    }
     
-    animate();
-    const interval = setInterval(animate, 1800);
-    
+    doDots()
+    const interval = setInterval(doDots, 1800);
     return () => clearInterval(interval);
-  }, []);
+  }, [dot1, dot2, dot3])
   
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>

@@ -285,20 +285,20 @@ export default function ResultsScreen() {
       setPlans(arr);
       _setDebugRes(arr as unknown as ResultPlan[]);
 
-      const genMs = Date.now() - startGen;
+      const _genMs = Date.now() - startGen;
       // Move progress to 85% only after generation step completes or aborts
       setGenerationProgress(85);
       if (cancelledRef.current) return;
       if (requestKeyRef.current !== normalizedLink) return;
 
       // Shuffle step
-      const res = (params.shuffle === '1' && seed != null) ? seededShuffle(arr, seed) : arr;
+      const _res = (params.shuffle === '1' && seed != null) ? seededShuffle(arr, seed) : arr;
 
       setCurrentStep(currentUserLang === 'ro' ? "Finalizez..." : "Finalizing...");
       setGenerationProgress(100);
 
       // Finalize step - already set above
-      // setPlans(res);
+      // setPlans(_res);
 
       // Success toast
       setToastMessage(currentUserLang === 'ro' ? '🎉 Planuri generate cu succes!' : '🎉 Plans generated successfully!');
