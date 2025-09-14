@@ -497,7 +497,7 @@ export default function Home() {
         {/* Timp */}
         <View style={{ paddingHorizontal: 4 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6, paddingLeft: 4 }}>
-            <Text style={{ fontSize: theme.textSizes.lg, fontWeight: "800", color: theme.colors.text }}>{lang==='ro' ? 'cât timp?' : t(lang,'home_time')}</Text>
+            <Text style={{ fontSize: theme.textSizes.lg, fontWeight: "800", color: theme.colors.text }}>{t(lang,'home_time')}</Text>
             <Text style={{ fontSize: theme.textSizes.base, fontWeight: "700", color: theme.colors.text }}>{formatHM(duration)}</Text>
           </View>
           <Slider
@@ -623,7 +623,7 @@ export default function Home() {
 
           <Link href={{ pathname: "/results", params: { ...buildParams(), shuffle: "1" } }} asChild>
             <Pressable style={{ borderWidth: 1, borderColor: theme.colors.borderSoft, paddingVertical: 14, borderRadius: 28, alignItems: "center", backgroundColor: theme.colors.surface }}>
-              <Text style={{ color: theme.colors.text, fontWeight: "700", fontSize: theme.textSizes.base, letterSpacing: 2 }}>SURPRINDE-MĂ</Text>
+              <Text style={{ color: theme.colors.text, fontWeight: "700", fontSize: theme.textSizes.base, letterSpacing: 2 }}>{t(lang,'home_surprise')}</Text>
             </Pressable>
           </Link>
         </View>
