@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (!raw && !cancelled) {
           setUser(null);
         }
-      } catch (e) {
+      } catch {
         // ignore restore errors
       } finally {
         if (!cancelled) setInitializing(false);

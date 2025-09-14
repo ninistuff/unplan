@@ -14,7 +14,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { user, updateProfile } = useAuth();
+  const { user } = useAuth();
   const [themeMode, setThemeModeState] = useState<ThemeMode>(user?.profile?.theme ?? 'auto');
   const [textSize, setTextSizeState] = useState<TextSize>(user?.profile?.textSize ?? 'medium');
 

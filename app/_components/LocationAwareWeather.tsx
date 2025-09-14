@@ -1,6 +1,6 @@
 // app/components/LocationAwareWeather.tsx - Location-Aware Weather with Neighborhood
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { color, radii, spacing } from '../../constants/theme';
 import { useWeather } from '../../hooks/useWeather';
@@ -25,9 +25,9 @@ export default function LocationAwareWeather() {
 
   useEffect(() => {
     detectUserLocation();
-  }, []);
+  }, [detectUserLocation]);
 
-  const detectUserLocation = async (useCache = true) => {
+  const detectUserLocation = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -87,7 +87,7 @@ export default function LocationAwareWeather() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [language]);
 
   const getWeatherEmoji = (condition: string, temp: number) => {
     const conditionLower = condition.toLowerCase();

@@ -313,15 +313,13 @@ export function usePerformanceMonitor(componentName: string) {
   });
   
   useEffect(() => {
-    const mountDuration = Date.now() - mountTime.current;
-    if (__DEV__ && mountDuration > 100) {
-      console.warn(`[Performance] ${componentName} took ${mountDuration}ms to mount`);
-    }
+    const mountedAt = mountTime.current;
+    const renders = renderCount.current;
     
     return () => {
-      const totalLifetime = Date.now() - mountTime.current;
+      const totalLifetime = Date.now() - mountedAt; 
       if (__DEV__) {
-        console.log(`[Performance] ${componentName} lifetime: ${totalLifetime}ms, renders: ${renderCount.current}`);
+        console.log(`[Performance] ${componentName} lifetime: ${totalLifetime}ms, renders: ${renders}`);
       }
     };
   }, [componentName]);
