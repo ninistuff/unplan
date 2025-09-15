@@ -1,17 +1,13 @@
-export type Transport = 'walk' | 'bike' | 'public' | 'car';
+export type TransportKind = "walk" | "bike" | "public" | "car"
 
-const SPEED_KMH: Record<Transport, number> = {
-  walk: 4.5,
-  bike: 15,
-  public: 20,
-  car: 35, // urban
-};
+function clamp(min: number, max: number, v: number) {
+  return Math.max(min, Math.min(max, v))
+}
 
-export function getSearchRadiusKm(durationMinutes: number, transport: Transport) {
-  const speed = SPEED_KMH[transport] ?? 4.5;
-  const hours = Math.max(durationMinutes, 15) / 60;
-  // mergem pe jumătate din distanța dus-întors, cu o marjă de 0.6
-  const distance = speed * hours * 0.6;
-  // limitează în oraș
-  return Math.max(1, Math.min(distance, 20)); // 1..20 km
+export function getSearchRadiusKm(durationMin: number, transport: TransportKind) {
+  const h = Math.max(0.5, durationMin / 60)
+  if (transport === "walk") return clamp(0.8, 3.0, 1.6 * h)
+  if (transport === "bike") return clamp(2.5, 8.0, 5.0 * h)
+  if (transport === "public") return clamp(3.0, 12.0, 6.5 * h)
+  return clamp(4.0, 15.0, 8.0 * h)
 }
