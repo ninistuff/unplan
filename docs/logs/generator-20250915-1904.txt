@@ -1,0 +1,37 @@
+# Generator Test Battery Logs - 2025-09-15 19:04
+
+## Scenario A: București, 120 min, walk, friends, buget 200
+[Plans] input.params {"duration":120,"transport":"walk","withWho":"friends","budget":200,"center":{"lat":44.4268,"lon":26.1025}}
+[Plans] overpass.stats {"center":{"lat":44.4268,"lon":26.1025},"raw":45,"filtered":38,"afterWho":22,"radius":1920,"requireOpen":true,"sample":["Café Verona","Crama Domnească","Parcul Herăstrău"]}
+[Plans] itinerary.config {"desiredStops":2,"maxTravelMin":42,"transport":"walk","categoriesWanted":["cafe","restaurant","bar","cinema","park"]}
+[Plans] output.plans [{"id":"A","steps":3,"km":2.8,"min":118,"cost":90},{"id":"B","steps":3,"km":3.1,"min":115,"cost":130}]
+
+## Scenario B: București, 180 min, walk, solo, buget 100
+[Plans] input.params {"duration":180,"transport":"walk","withWho":"solo","budget":100,"center":{"lat":44.4268,"lon":26.1025}}
+[Plans] overpass.stats {"center":{"lat":44.4268,"lon":26.1025},"raw":52,"filtered":44,"afterWho":28,"radius":2880,"requireOpen":true,"sample":["Muzeul Național","Librăria Cărturești","Parcul Cișmigiu"]}
+[Plans] itinerary.config {"desiredStops":3,"maxTravelMin":54,"transport":"walk","categoriesWanted":["cafe","museum","park","cinema","restaurant"]}
+[Plans] output.plans [{"id":"A","steps":4,"km":4.2,"min":175,"cost":95},{"id":"B","steps":3,"km":3.6,"min":168,"cost":75}]
+
+## Scenario C: București, 240 min, bike, friends, buget 150
+[Plans] input.params {"duration":240,"transport":"bike","withWho":"friends","budget":150,"center":{"lat":44.4268,"lon":26.1025}}
+[Plans] overpass.stats {"center":{"lat":44.4268,"lon":26.1025},"raw":78,"filtered":65,"afterWho":35,"radius":10000,"requireOpen":true,"sample":["Escape Room Bucharest","Bowling Cosmic","Berăria H"]}
+[Plans] itinerary.config {"desiredStops":4,"maxTravelMin":72,"transport":"bike","categoriesWanted":["cafe","restaurant","bar","cinema","park"]}
+[Plans] output.plans [{"id":"A","steps":5,"km":8.4,"min":235,"cost":140},{"id":"B","steps":4,"km":6.8,"min":228,"cost":120},{"id":"C","steps":4,"km":7.2,"min":232,"cost":135}]
+
+## Scenario D: București, 180 min, public, family, buget 120
+[Plans] input.params {"duration":180,"transport":"public","withWho":"family","budget":120,"center":{"lat":44.4268,"lon":26.1025}}
+[Plans] overpass.stats {"center":{"lat":44.4268,"lon":26.1025},"raw":68,"filtered":58,"afterWho":31,"radius":11700,"requireOpen":true,"sample":["Muzeul Antipa","Parcul Herăstrău","Cafeneaua Veche"]}
+[Plans] itinerary.config {"desiredStops":3,"maxTravelMin":54,"transport":"public","categoriesWanted":["park","museum","cafe","restaurant","cinema"]}
+[Plans] output.plans [{"id":"A","steps":4,"km":12.5,"min":178,"cost":110},{"id":"B","steps":3,"km":9.8,"min":172,"cost":85}]
+
+## Scenario E: București, 120 min, car, friends, buget 80
+[Plans] input.params {"duration":120,"transport":"car","withWho":"friends","budget":80,"center":{"lat":44.4268,"lon":26.1025}}
+[Plans] overpass.stats {"center":{"lat":44.4268,"lon":26.1025},"raw":85,"filtered":72,"afterWho":42,"radius":9600,"requireOpen":true,"sample":["Mall Băneasa","Cinema City","Starbucks Pipera"]}
+[Plans] itinerary.config {"desiredStops":2,"maxTravelMin":42,"transport":"car","categoriesWanted":["cafe","restaurant","bar","cinema","park"]}
+[Plans] output.plans [{"id":"A","steps":3,"km":15.2,"min":118,"cost":75},{"id":"B","steps":2,"km":12.8,"min":115,"cost":65}]
+
+## Scenario F: București, 300 min, walk, partner, buget 300
+[Plans] input.params {"duration":300,"transport":"walk","withWho":"partner","budget":300,"center":{"lat":44.4268,"lon":26.1025}}
+[Plans] overpass.stats {"center":{"lat":44.4268,"lon":26.1025},"raw":58,"filtered":48,"afterWho":26,"radius":4800,"requireOpen":true,"sample":["Galeria Națională","Café Gradina","Cinema Elvire Popesco"]}
+[Plans] itinerary.config {"desiredStops":6,"maxTravelMin":90,"transport":"walk","categoriesWanted":["cafe","restaurant","gallery","cinema","park"]}
+[Plans] output.plans [{"id":"A","steps":7,"km":6.8,"min":295,"cost":280},{"id":"B","steps":6,"km":5.9,"min":288,"cost":245},{"id":"C","steps":6,"km":6.2,"min":292,"cost":265}]
