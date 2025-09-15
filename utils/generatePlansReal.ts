@@ -87,8 +87,8 @@ function radiusFor(transport: GenerateOptions["transport"], duration: number) {
 }
 
 function withinSegmentLimit(transport: GenerateOptions["transport"], meters: number) {
-  if (transport === "walk") return meters <= 2000
-  if (transport === "bike") return meters <= 4500
+  if (transport === "walk") return meters <= 2500
+  if (transport === "bike") return meters <= 5000
   if (transport === "public") return meters <= 12000
   if (transport === "car") return meters <= 20000
   return true
@@ -180,7 +180,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
   } catch {}
 
   const desiredStops = Math.max(1, stopsByDuration(opts.duration))
-  const maxTravelShare = opts.duration <= 120 ? 0.30 : opts.duration <= 150 ? 0.35 : 0.30
+  const maxTravelShare = opts.duration <= 150 ? 0.35 : 0.30
   const maxTravelMin = Math.floor(opts.duration * maxTravelShare)
 
   const mode = modeFromTransport(opts.transport)
