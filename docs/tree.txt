@@ -1,0 +1,169 @@
+.env
+.env.example
+.github
+  .github\.github
+    .github\.github\workflows
+      .github\.github\workflows\ci.yml
+  .github\README.md
+  .github\workflows
+    .github\workflows\babel-check.yml
+.gitignore
+.qodo
+.vscode
+  .vscode\settings.json
+app
+  app\+not-found.tsx
+  app\favorites.tsx
+  app\forgot.tsx
+  app\home.tsx
+  app\index.tsx
+  app\login.tsx
+  app\plan
+    app\plan\[id].tsx
+  app\profile.tsx
+  app\register.tsx
+  app\results.tsx
+  app\_components
+    app\_components\HeaderActions.tsx
+    app\_components\Icon.tsx
+    app\_components\LocationAwareWeather.tsx
+    app\_components\LogoutButton.tsx
+    app\_components\SunBall.tsx
+    app\_components\TransitDebugPanel.tsx
+    app\_components\WeatherAvatar.tsx
+  app\_layout.tsx
+app.json
+assets
+  assets\fonts
+    assets\fonts\SpaceMono-Regular.ttf
+  assets\images
+    assets\images\adaptive-icon.png
+    assets\images\favicon.png
+    assets\images\icon.png
+    assets\images\partial-react-logo.png
+    assets\images\react-logo.png
+    assets\images\react-logo@2x.png
+    assets\images\react-logo@3x.png
+    assets\images\splash-icon.png
+  assets\lottie
+    assets\lottie\cloudy.json
+    assets\lottie\cold.json
+    assets\lottie\hot.json
+    assets\lottie\rainy.json
+    assets\lottie\sunny.json
+babel.config.js
+components
+  components\EnhancedPlanCard.tsx
+  components\FeedbackSystem.tsx
+constants
+  constants\Colors.ts
+  constants\theme.ts
+debug-test.html
+docs
+  docs\AGE_SECTION_ENHANCEMENT.md
+  docs\ANALYZING_LOCATION_ERROR_FIXES.md
+  docs\ANIMATION_ERROR_FIXES.md
+  docs\APPLICATION_FIXES_FINAL.md
+  docs\audit-babel.log
+  docs\audit-depcheck.log
+  docs\audit-deps.log
+  docs\audit-doctor.log
+  docs\audit-env.log
+  docs\audit-lint.log
+  docs\audit-typecheck.log
+  docs\COMPACT_BUTTONS_REDESIGN.md
+  docs\COMPREHENSIVE_ANALYSIS_AND_FIXES.md
+  docs\CONSOLE_RENDER_ERROR_FIXES.md
+  docs\CONTEXTUAL_PLANNING_SYSTEM.md
+  docs\CRITICAL_FIXES_SUMMARY.md
+  docs\DEBUGGING_PLAN_GENERATION.md
+  docs\DEBUG_REPORT.md
+  docs\DEPENDENCIES.md
+  docs\EMPTY_PLANS_FIX.md
+  docs\FINAL_EMPTY_PLANS_FIX.md
+  docs\flow-real-planning.mmd
+  docs\flow-real-planning.png
+  docs\INFINITE_LOOP_FIX.md
+  docs\LANGUAGE_IMPROVEMENTS.md
+  docs\LOCATION_AWARE_WEATHER_IMPLEMENTATION.md
+  docs\LOCATION_DETECTION_FIX.md
+  docs\LOCATION_PRECISION_IMPROVEMENTS.md
+  docs\LOCATION_REMOVAL_FROM_PROFILE.md
+  docs\LOCATION_SECTION_ENHANCEMENT.md
+  docs\MAP_DEBUGGING_GUIDE.md
+  docs\MAP_LOADING_FIX.md
+  docs\MAP_SIMPLIFICATION.md
+  docs\matching-rules.md
+  docs\MAXIMUM_UPDATE_DEPTH_FIX.md
+  docs\PERFORMANCE_OPTIMIZATIONS.md
+  docs\PLAN_GENERATION_ERROR_FIXES.md
+  docs\PLAN_GENERATION_FIXES.md
+  docs\PROFILE_AUTO_SAVE_AND_NAVIGATION.md
+  docs\PROFILE_COMPLETENESS_VALUE_EXPLANATION.md
+  docs\PROFILE_PAGE_IMPROVEMENTS_FINAL.md
+  docs\PROFILE_SIMPLIFICATION.md
+  docs\PUBLIC_TRANSPORT_FIXES.md
+  docs\PUBLIC_TRANSPORT_SETUP.md
+  docs\QUALITY_DIVERSITY_SYSTEM.md
+  docs\REALISTIC_PLANNING_IMPROVEMENTS.md
+  docs\RENDER_ERROR_FIXES.md
+  docs\ROBUST_LOCATION_DETECTION_IMPLEMENTATION.md
+  docs\TEXT_SIZE_CONSOLE_ERROR_FIX.md
+  docs\THEME_FUNCTIONALITY_FIX.md
+  docs\TIME_DURATION_LIMIT_UPDATE.md
+  docs\TRANSPORT_BUTTONS_REDESIGN.md
+  docs\TRANSPORT_MODE_FIXES.md
+  docs\TRANSPORT_STRUCTURE_REDESIGN.md
+  docs\troubleshooting-reanimated.md
+  docs\ULTRA_REALISTIC_ALGORITHM.md
+  docs\USER_PROFILE_ENHANCEMENTS.md
+  docs\USER_PROFILE_IMPROVEMENTS_ANALYSIS.md
+  docs\UX_ENHANCEMENTS_FINAL.md
+  docs\UX_IMPROVEMENTS_COMPREHENSIVE.md
+  docs\VISUAL_CUSTOMIZATION_IMPLEMENTATION.md
+  docs\WIDGET_DEBUGGING_INVESTIGATION.md
+eslint.config.js
+expo-env.d.ts
+hooks
+  hooks\useColorScheme.ts
+  hooks\useColorScheme.web.ts
+  hooks\useThemeColor.ts
+  hooks\useWeather.ts
+lib
+  lib\auth.tsx
+  lib\autoplan.ts
+  lib\errorHandler.ts
+  lib\favorites.ts
+  lib\i18n.ts
+  lib\locationService.ts
+  lib\neighborhoods.ts
+  lib\networkManager.ts
+  lib\performanceMonitor.ts
+  lib\planTypes.ts
+  lib\store.ts
+  lib\theme.ts
+  lib\ThemeProvider.tsx
+package-lock.json
+package.json
+README.md
+scripts
+  scripts\check-babel.js
+  scripts\print-tree.js
+  scripts\reset-project.js
+  scripts\test-transit.js
+  scripts\update-home-i18n.js
+  scripts\update-results-i18n.js
+test-generator.js
+tsconfig.json
+utils
+  utils\fetchWithTimeout.ts
+  utils\generatePlansReal.ts
+  utils\generatePlansSimple.ts
+  utils\overpass.ts
+  utils\planRadius.ts
+  utils\routing.ts
+  utils\transitConfig.ts
+  utils\transitRouter.ts
+  utils\weatherMessage.ts
+web
+  web\mapHtml.ts
