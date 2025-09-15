@@ -221,8 +221,6 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
       if (!candidate) continue
 
       const dist = hav(from, { lat: candidate.lat, lon: candidate.lon })
-      const segMin = travelMinutes(dist, mode)
-      const stopMin = defaultDuration(candidate.category)
       const { travelMin, visitMin } = recomputeTimes(anchor, [...results, { lat: candidate.lat, lon: candidate.lon, category: candidate.category }])
       const newTotalTime = travelMin + visitMin
 
