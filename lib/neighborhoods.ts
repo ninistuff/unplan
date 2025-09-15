@@ -1,4 +1,11 @@
 // lib/neighborhoods.ts - București Neighborhoods Detection & Local Tips
+export type City = {
+  id: string;
+  name: string;
+  nameEn: string;
+  polygon: [number, number][]; // [lat, lon]
+};
+
 export interface Neighborhood {
   id: string;
   name: string;
@@ -390,6 +397,45 @@ export const BUCHAREST_NEIGHBORHOODS: Neighborhood[] = [
     }
   }
 ];
+
+export const CITIES: City[] = [
+  {
+    id: 'bucharest',
+    name: 'București',
+    nameEn: 'Bucharest',
+    // poligon aproximativ al orașului (bounding box suficient pentru MVP)
+    polygon: [
+      [44.55, 26.02],
+      [44.55, 26.25],
+      [44.28, 26.25],
+      [44.28, 26.02],
+    ],
+  },
+];
+
+// Point-in-polygon algorithm
+function pointInPolygon(point: [number, number], polygon: [number, number][]): boolean {
+  const [x, y] = point;
+  let inside = false;
+
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
+}
+
+export function detectCity(lat: number, lon: number): City | null {
+  for (const c of CITIES) {
+    if (pointInPolygon([lat, lon], c.polygon)) return c;
+  }
+  return null;
+}
 
 // Calculate distance between two coordinates
 function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {

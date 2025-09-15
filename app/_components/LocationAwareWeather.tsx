@@ -2,16 +2,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { color, radii, spacing } from '../../constants/theme';
+import { color, radii, spacing } from "../../constants/theme";
 import { useWeather } from '../../hooks/useWeather';
 import { useAuth } from '../../lib/auth';
 import { locationService } from '../../lib/locationService';
-import { detectNeighborhood, getWeatherTip, Neighborhood } from '../../lib/neighborhoods';
+import { detectCity, detectNeighborhood, getWeatherTip, Neighborhood } from '../../lib/neighborhoods';
 
 interface LocationData {
   lat: number;
   lon: number;
   neighborhood: Neighborhood | null;
+  city?: { id: string; name: string; nameEn: string } | null;
 }
 
 export default function LocationAwareWeather() {
@@ -22,10 +23,6 @@ export default function LocationAwareWeather() {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    detectUserLocation();
-  }, [detectUserLocation]);
 
   const detectUserLocation = useCallback(async () => {
     try {
@@ -45,7 +42,7 @@ export default function LocationAwareWeather() {
       // Get location using robust service
       const locationResult = await locationService.getCurrentLocation({
         timeout: 15000, // 15 seconds timeout
-        useCache,
+        useCache: true,
         highAccuracy: true
       });
 
@@ -57,7 +54,11 @@ export default function LocationAwareWeather() {
       const neighborhood = detectNeighborhood(lat, lon);
       console.log('[LocationAwareWeather] Neighborhood detected:', neighborhood?.name || 'Unknown');
 
-      setLocation({ lat, lon, neighborhood });
+      // Detect city
+      const city = detectCity(lat, lon);
+      console.log('[LocationAwareWeather] City detected:', city?.name || 'Unknown');
+
+      setLocation({ lat, lon, neighborhood, city });
     } catch (err: any) {
       console.error('[LocationAwareWeather] Location detection failed:', err);
 
@@ -66,10 +67,12 @@ export default function LocationAwareWeather() {
       if (cachedLocation) {
         console.log('[LocationAwareWeather] Using cached location as fallback');
         const neighborhood = detectNeighborhood(cachedLocation.latitude, cachedLocation.longitude);
+        const city = detectCity(cachedLocation.latitude, cachedLocation.longitude);
         setLocation({
           lat: cachedLocation.latitude,
           lon: cachedLocation.longitude,
-          neighborhood
+          neighborhood,
+          city
         });
         return;
       }
@@ -88,6 +91,10 @@ export default function LocationAwareWeather() {
       setLoading(false);
     }
   }, [language]);
+  
+  useEffect(() => {
+    detectUserLocation();
+  }, [detectUserLocation]);
 
   const getWeatherEmoji = (condition: string, temp: number) => {
     const conditionLower = condition.toLowerCase();
@@ -150,7 +157,7 @@ export default function LocationAwareWeather() {
 
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <Pressable
-            onPress={() => detectUserLocation(false)}
+            onPress={() => detectUserLocation()}
             style={{
               flex: 1,
               backgroundColor: '#f59e0b',
@@ -201,6 +208,11 @@ export default function LocationAwareWeather() {
   const weatherEmoji = getWeatherEmoji(condition, temp);
   const tempMessage = getTemperatureMessage(temp);
 
+  const cityName =
+    location?.city
+      ? (language === 'en' ? location.city.nameEn : location.city.name)
+      : (language === 'en' ? 'Your city' : 'Orașul tău');
+
   return (
     <View style={{
       backgroundColor: color.surface,
@@ -213,31 +225,30 @@ export default function LocationAwareWeather() {
       {/* Location & Weather Header */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
         <Ionicons name="location" size={20} color={color.accent} />
-        <Text style={{ 
-          color: color.text, 
-          fontSize: 18, 
-          fontWeight: '700', 
+        <Text style={{
+          color: color.text,
+          fontSize: 18,
+          fontWeight: '700',
           marginLeft: spacing.sm,
           flex: 1
         }}>
-          {neighborhood ? 
-            (language === 'en' ? neighborhood.nameEn : neighborhood.name) : 
-            (language === 'en' ? 'Bucharest' : 'București')
-          }
+          {neighborhood
+            ? (language === 'en' ? neighborhood.nameEn : neighborhood.name)
+            : cityName}
         </Text>
-        <Text style={{ 
-          color: color.text, 
-          fontSize: 18, 
-          fontWeight: '700' 
+        <Text style={{
+          color: color.text,
+          fontSize: 18,
+          fontWeight: '700'
         }}>
           {weatherEmoji} {temp}°C
         </Text>
       </View>
 
       {/* Weather Message */}
-      <Text style={{ 
-        color: color.textMuted, 
-        fontSize: 16, 
+      <Text style={{
+        color: color.textMuted,
+        fontSize: 16,
         marginBottom: spacing.sm,
         lineHeight: 22
       }}>
@@ -246,9 +257,9 @@ export default function LocationAwareWeather() {
 
       {/* Neighborhood Description */}
       {neighborhood && (
-        <Text style={{ 
-          color: color.textMuted, 
-          fontSize: 14, 
+        <Text style={{
+          color: color.textMuted,
+          fontSize: 14,
           marginBottom: spacing.sm,
           fontStyle: 'italic'
         }}>
@@ -265,9 +276,9 @@ export default function LocationAwareWeather() {
           borderLeftWidth: 4,
           borderLeftColor: color.accent
         }}>
-          <Text style={{ 
-            color: color.text, 
-            fontSize: 14, 
+          <Text style={{
+            color: color.text,
+            fontSize: 14,
             fontWeight: '600',
             lineHeight: 20
           }}>
@@ -278,7 +289,7 @@ export default function LocationAwareWeather() {
 
       {/* Refresh Button */}
       <Pressable
-        onPress={() => detectUserLocation(false)} // Force fresh location
+        onPress={() => detectUserLocation()} // Force fresh location
         style={{
           marginTop: spacing.sm,
           alignSelf: 'center',
@@ -287,10 +298,10 @@ export default function LocationAwareWeather() {
           borderRadius: radii.sm
         }}
       >
-        <Text style={{ 
-          color: color.accent, 
-          fontSize: 12, 
-          fontWeight: '600' 
+        <Text style={{
+          color: color.accent,
+          fontSize: 12,
+          fontWeight: '600'
         }}>
           🔄 {language === 'en' ? 'Refresh location' : 'Actualizează locația'}
         </Text>

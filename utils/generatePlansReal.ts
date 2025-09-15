@@ -2,6 +2,7 @@
 import { locationService } from "../lib/locationService";
 import type { GenerateOptions, LatLng, Plan, POI } from "../lib/planTypes";
 import { fetchPOIsAround, fetchPOIsInCity, type OverpassCategory } from "./overpass";
+import { getSearchRadiusKm } from "./planRadius";
 
 // Haversine simplu (m)
 function hav(a: LatLng, b: LatLng) {
@@ -88,12 +89,14 @@ function modeFromTransport(t?: GenerateOptions["transport"]): Plan["mode"] {
 }
 
 function radiusFor(transport: GenerateOptions["transport"], duration: number): number {
-  // în oraș, în funcție de mod + durată - relaxat pentru 2h pe jos
-  if (transport === "walk") return Math.min(4000, 1200 + duration * 12); // mărit pentru 2h
-  if (transport === "bike") return Math.min(8000, 1500 + duration * 15);
-  if (transport === "public") return Math.min(12000, 2500 + duration * 20);
-  if (transport === "car") return Math.min(15000, 3000 + duration * 20);
-  return 4000;
+  // folosește noul utilitar pentru rază dinamică
+  const transportType = transport === "walk" ? "walk" :
+                       transport === "bike" ? "bike" :
+                       transport === "public" ? "public" :
+                       transport === "car" ? "car" : "walk";
+
+  const radiusKm = getSearchRadiusKm(duration, transportType);
+  return Math.round(radiusKm * 1000); // convertește la metri
 }
 
 function withinSegmentLimit(transport: GenerateOptions["transport"], meters: number) {
@@ -333,6 +336,8 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     const title = plans.length === 0 ? ("Echilibrat") : plans.length === 1 ? ("Social") : ("Cultural");
 
     const routeSegments: Plan["routeSegments"] = [];
+
+    const mode = opts.transport === "walk" ? "foot" : opts.transport === "public" ? "foot" : opts.transport === "car" ? "driving" : opts.transport === "bike" ? "bike" : "foot";
 
     const p: Plan = {
       id,

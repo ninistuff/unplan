@@ -2,11 +2,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { InteractionManager, Platform, Pressable, SafeAreaView, ScrollView, Share, Text, View } from "react-native";
+import { InteractionManager, Platform, Pressable, SafeAreaView, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../lib/auth";
 import { keyForPlan, useFavorites } from "../lib/favorites";
 import { t } from "../lib/i18n";
 import type { GenerateOptions, Plan } from "../lib/planTypes";
+import { useTheme } from "../lib/ThemeProvider";
 
 import { generatePlans } from "../utils/generatePlansReal";
 
@@ -15,14 +16,16 @@ import { generatePlans } from "../utils/generatePlansReal";
 // import { measureAsync } from "../lib/performanceMonitor";
 // import { planActions, useAppError, useLoadingStates, usePlans } from "../lib/store";
 
-function formatHM(mins: number) {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h ${m > 0 ? m + "min" : ""}`.trim() : `${m}min`;
-}
+function formatHM(mins: number) { const h = Math.floor(mins / 60); const m = mins % 60; return h > 0 ? `${h}h ${m > 0 ? `${m}m` : ''}`.trim() : `${m}m`; }
+
+function formatKm(v: number) { return v < 1 ? `${Math.round(v * 1000)} m` : `${v.toFixed(1)} km`; }
 
 export default function ResultsScreen() {
+  const { theme } = useTheme();
+
+
   const rawParams = useLocalSearchParams();
+  console.log("[results] rawParams", rawParams)
   const { user } = useAuth();
   const lang = (user?.profile?.language ?? 'en') as 'en' | 'ro';
   const units = (user?.profile?.units ?? 'metric') as 'metric' | 'imperial';
@@ -134,6 +137,64 @@ export default function ResultsScreen() {
 
     return { params, appliedFallbacks: fallbackUsed, normalizedLink, seed };
   }, [rawParams, user?.id]);
+
+  const styles = React.useMemo(() =>
+    StyleSheet.create({
+      card: {
+        backgroundColor: theme.colors.surface,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: theme.colors.borderSoft,
+      },
+      title: {
+        fontSize: theme.textSizes.base,
+        fontWeight: "800",
+        color: theme.colors.text,
+        marginBottom: 8,
+      },
+      badgeRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        flexWrap: "wrap",
+        columnGap: 8,
+        rowGap: 6,
+        marginBottom: 8,
+      },
+      badge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 999,
+        backgroundColor: theme.colors.surface,
+        borderWidth: 1,
+        borderColor: theme.colors.borderSoft,
+      },
+      badgeText: {
+        fontSize: 12,
+        fontWeight: "600",
+        color: theme.colors.textSecondary,
+      },
+      stopsLine: {
+        flexDirection: "row",
+        alignItems: "center",
+        flexWrap: "wrap",
+      },
+      stopText: {
+        color: theme.colors.textSecondary,
+        fontSize: 14,
+        marginRight: 8,
+        marginBottom: 2,
+      },
+      dot: {
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: theme.colors.borderSoft,
+        marginHorizontal: 6,
+      },
+    }),
+  [theme]);
 
   // Small banner when fallbacks applied
   const [showFallbackBanner, setShowFallbackBanner] = useState(false);
@@ -253,6 +314,7 @@ export default function ResultsScreen() {
 
       const arr = Array.isArray(resRaw) ? resRaw : []
       setPlans(arr);
+      console.log("[results] sample plan", arr?.[0])
 
       // Move progress to 85% only after generation step completes or aborts
       setGenerationProgress(85);
@@ -450,14 +512,35 @@ export default function ResultsScreen() {
     console.log('[Results] debug plans:', valid.map(p => p.steps.length))
     return (
       <ScrollView style={{ padding: 16 }}>
-        {valid.map((p, i) => (
-          <View key={i} style={{ marginBottom: 16 }}>
-            <Text>Plan {i + 1} • {p.steps.length} opriri</Text>
-            {p.steps.map((s: any, j: number) => (
-              <Text key={j}>• {s.kind} {s.poi?.name || ''}</Text>
-            ))}
+        {Array.isArray(valid) ? valid.map((plan, i) => {
+          const stopNames = (plan.steps ?? [])
+            .filter(s => s.kind === "poi")
+            .map(s => s.name);
+
+          return (
+          <View key={i} style={styles.card}>
+            <Text style={styles.title}>
+              {plan.title || `Planul ${i + 1}`}
+            </Text>
+            <View style={styles.badgeRow}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{formatHM(plan.min || 0)}</Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{formatKm(plan.km || 0)}</Text>
+              </View>
+            </View>
+            <View style={styles.stopsLine}>
+              {stopNames.map((name, i) => (
+                <React.Fragment key={name + i}>
+                  {i > 0 && <View style={styles.dot} />}
+                  <Text style={styles.stopText}>{name}</Text>
+                </React.Fragment>
+              ))}
+            </View>
           </View>
-        ))}
+          )
+        }) : []}
       </ScrollView>
     )
   }
@@ -575,6 +658,9 @@ export default function ResultsScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={{ color: "#0f172a", fontSize: 19, fontWeight: "700" }}>
                   {theme.title}
+                </Text>
+                <Text style={{ opacity: 0.7 }}>
+                  {p.mode} · {p.min} min · {p.km} km
                 </Text>
                 <Text style={{ color: "#64748b", fontSize: 13, marginTop: 2 }}>
                   {theme.description}

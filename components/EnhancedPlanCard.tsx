@@ -130,8 +130,11 @@ export default function EnhancedPlanCard({ plan, index, lang, onShuffle, isFavor
               }}>
                 {plan.title}
               </Text>
-              <Text style={{ 
-                color: 'rgba(255,255,255,0.9)', 
+              <Text style={{ opacity: 0.7, fontSize: 12, marginTop: 4 }}>
+                {plan.mode} · {plan.min} min · {plan.km} km
+              </Text>
+              <Text style={{
+                color: 'rgba(255,255,255,0.9)',
                 fontSize: 14,
                 fontWeight: '500'
               }}>
