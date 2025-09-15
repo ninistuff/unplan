@@ -10,7 +10,8 @@
     "lint": "expo lint",
     "doctor": "npx expo-doctor",
     "start:clean": "expo start -c",
-    "check:babel": "node scripts/check-babel.js"
+    "check:babel": "node scripts/check-babel.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
