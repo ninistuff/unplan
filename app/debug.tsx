@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { generatePlans } from '../utils/generatePlansReal';
 
 export default function DebugScreen() {
@@ -7,7 +7,6 @@ export default function DebugScreen() {
     console.log('🧪 Starting real test scenarios...');
     
     const center = { lat: 44.4268, lon: 26.1025 }; // București
-    const wx = { rainSoon: false, hot: false, windy: false };
     
     const scenarios = [
       { name: 'A', duration: 120, transport: 'walk' as const, withWho: 'friends' as const, budget: 200 },
@@ -27,7 +26,8 @@ export default function DebugScreen() {
           transport: scenario.transport,
           withWho: scenario.withWho,
           budget: scenario.budget,
-        }, center, wx);
+          center: center,
+        });
         
         console.log(`✅ Scenario ${scenario.name} completed: ${plans.length} plans generated`);
       } catch (error) {
