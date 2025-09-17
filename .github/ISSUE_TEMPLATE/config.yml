@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Raport securitate
+    url: mailto:ninistuff+security@gmail.com
+    about: Raportează vulnerabilități în privat
+  - name: Discuții
+    url: https://github.com/ninistuff/unplan/discussions
+    about: Întrebări și idei generale
