@@ -2,6 +2,33 @@
 
 # Welcome to your Expo app
 
+## Platforme suportate
+
+Android. iOS. Web în plan. Testarea curentă se face pe emulator Android și pe device-uri reale.
+
+## Setup reproductibil
+
+Node 20 LTS. NPM 10. Expo CLI global.
+
+### Instalare
+```bash
+npm install
+```
+
+### Rulare
+```bash
+npm start
+```
+
+### Android
+Pornește un emulator din Android Studio. Apasă `a` în Expo.
+
+### iOS
+Necesită macOS și Xcode. Apasă `i` în Expo.
+
+### Variabile
+Copiază `.env.example` în `.env`. Ajustează URL-urile dacă folosești instanțe proprii.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
