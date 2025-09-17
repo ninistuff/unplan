@@ -1,4 +1,4 @@
-[![CI](https://github.com/ninistuff/unplan/actions/workflows/ci.yml/badge.svg)](https://github.com/ninistuff/unplan/actions/workflows/ci.yml) [![CodeQL](https://github.com/ninistuff/unplan/actions/workflows/codeql.yml/badge.svg)](https://github.com/ninistuff/unplan/actions/workflows/codeql.yml)
+[![CI](https://github.com/ninistuff/unplan/actions/workflows/ci.yml/badge.svg)](https://github.com/ninistuff/unplan/actions/workflows/ci.yml)
 
 # Welcome to your Expo app
 
