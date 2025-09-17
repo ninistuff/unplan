@@ -43,6 +43,14 @@ Copiază `.env.example` în `.env`. Ajustează URL-urile dacă folosești instan
 
 **Open-Meteo.** Stabil. Timeout 8s. Fallback pe condiție unknown.
 
+## Caching
+
+Rezultate intermediare stocate în memorie pe durata sesiunii, POI și meteo.
+
+Invalidare la schimbarea orașului sau după 15 minute.
+
+Nu scriem pe disc. Nu există sincronizare remote.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
