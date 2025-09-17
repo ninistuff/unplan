@@ -105,6 +105,18 @@ npm run doctor
 
 **Timp de răspuns mare la prima rulare.** Soluție: rulează reset și reîncarcă.
 
+## Roadmap 2 săptămâni
+
+**Săptămâna 1**
+• Filtre pentru copii, seniori, animale. Criteriu: Filtrul apare pe Home și influențează generarea.
+• Filtre accesibilitate. Criteriu: Pe Home apare „Acces scaun rulant". Generatorul alege doar locuri cu OSM `wheelchair=yes` și, dacă este disponibil, `toilets:wheelchair=yes`. La rezultate puține, afișează motivul și oferă alternative gratuite în aer liber.
+
+**Săptămâna 2**
+• Scor de diversitate între A, B, C. Criteriu: Zero duplicate de POI în același plan. Minim 3 categorii per plan.
+• Fallback idei locale pentru buget 0. Criteriu: Minim 10 idei variate.
+• Teste. Criterii: 5 teste pentru buget, durată, orar, accesibilitate `wheelchair=yes`, diversitate.
+• CI extins pentru teste. Adăugăm pasul npm test într-un PR separat.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
