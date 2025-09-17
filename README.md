@@ -51,6 +51,18 @@ Invalidare la schimbarea orașului sau după 15 minute.
 
 Nu scriem pe disc. Nu există sincronizare remote.
 
+## Erori și UX
+
+**Fără rețea.** Afișează un ecran cu Reîncearcă. Păstrează planurile deja generate.
+
+**Locație oprită.** Arată explicație scurtă și buton pentru setările de locație. Oferă Alege oraș manual.
+
+**API indisponibil.** Afișează Încarcă din nou. Dacă toate sursele eșuează, arată planuri generice gratuite.
+
+**Permisiuni respinse de mai multe ori.** Nu bloca interfața. Arată opțiune Retrimite permisiunea.
+
+**Timeout.** Arată loader scurt și mesaj de încercare din nou.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
