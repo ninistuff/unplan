@@ -117,6 +117,24 @@ npm run doctor
 • Teste. Criterii: 5 teste pentru buget, durată, orar, accesibilitate `wheelchair=yes`, diversitate.
 • CI extins pentru teste. Adăugăm pasul npm test într-un PR separat.
 
+## Exemplu output generator
+
+```json
+[
+  {
+    "id": "A",
+    "budgetPerPerson": 50,
+    "durationMin": 150,
+    "transport": "walk",
+    "steps": [
+      { "type": "poi", "name": "Cafe X", "osmId": 123, "etaMin": 10, "stayMin": 30 },
+      { "type": "poi", "name": "Muzeu Y", "osmId": 456, "etaMin": 15, "stayMin": 60 },
+      { "type": "poi", "name": "Parc Z", "osmId": 789, "etaMin": 12, "stayMin": 25 }
+    ]
+  }
+]
+```
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
