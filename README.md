@@ -29,6 +29,12 @@ Necesită macOS și Xcode. Apasă `i` în Expo.
 ### Variabile
 Copiază `.env.example` în `.env`. Ajustează URL-urile dacă folosești instanțe proprii.
 
+## Permisiuni și refuz
+
+**Locație.** Se cere pe Home la primul acces. Dacă refuzi, Home arată un buton pentru retrimiterea permisiunii și opțiunea Alege oraș manual. Results generează planuri fără poziție exactă.
+
+**Date.** Nu salvăm PII în repo. Rezultatele se păstrează doar local pe sesiune.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
