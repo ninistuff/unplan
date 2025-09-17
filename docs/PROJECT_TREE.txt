@@ -1,0 +1,136 @@
+unplan/
+|-- .env.example
+|-- .gitignore
+|-- .nvmrc
+|-- app.json
+|-- babel.config.js
+|-- eslint.config.js
+|-- package.json
+|-- package-lock.json
+|-- README.md
+|-- tsconfig.json
+|-- .github/
+|   |-- README.md
+|   |-- workflows/
+|-- .vscode/
+|   |-- settings.json
+|-- app/
+|   |-- _components/
+|   |-- _layout.tsx
+|   |-- +not-found.tsx
+|   |-- favorites.tsx
+|   |-- forgot.tsx
+|   |-- home.tsx
+|   |-- index.tsx
+|   |-- login.tsx
+|   |-- plan/
+|   |-- profile.tsx
+|   |-- register.tsx
+|   |-- results.tsx
+|-- assets/
+|   |-- fonts/
+|   |-- images/
+|   |-- lottie/
+|-- components/
+|   |-- EnhancedPlanCard.tsx
+|   |-- FeedbackSystem.tsx
+|-- constants/
+|   |-- Colors.ts
+|   |-- theme.ts
+|-- docs/
+|   |-- AGE_SECTION_ENHANCEMENT.md
+|   |-- ANALYZING_LOCATION_ERROR_FIXES.md
+|   |-- ANIMATION_ERROR_FIXES.md
+|   |-- APPLICATION_FIXES_FINAL.md
+|   |-- audit-router.txt
+|   |-- audit-structure.md
+|   |-- COMPACT_BUTTONS_REDESIGN.md
+|   |-- COMPREHENSIVE_ANALYSIS_AND_FIXES.md
+|   |-- CONSOLE_RENDER_ERROR_FIXES.md
+|   |-- CONTEXTUAL_PLANNING_SYSTEM.md
+|   |-- CRITICAL_FIXES_SUMMARY.md
+|   |-- DEBUG_REPORT.md
+|   |-- DEBUGGING_PLAN_GENERATION.md
+|   |-- DEPENDENCIES.md
+|   |-- EMPTY_PLANS_FIX.md
+|   |-- FINAL_EMPTY_PLANS_FIX.md
+|   |-- flow-real-planning.mmd
+|   |-- flow-real-planning.png
+|   |-- INFINITE_LOOP_FIX.md
+|   |-- LANGUAGE_IMPROVEMENTS.md
+|   |-- LOCATION_AWARE_WEATHER_IMPLEMENTATION.md
+|   |-- LOCATION_DETECTION_FIX.md
+|   |-- LOCATION_PRECISION_IMPROVEMENTS.md
+|   |-- LOCATION_REMOVAL_FROM_PROFILE.md
+|   |-- LOCATION_SECTION_ENHANCEMENT.md
+|   |-- MAP_DEBUGGING_GUIDE.md
+|   |-- MAP_LOADING_FIX.md
+|   |-- MAP_SIMPLIFICATION.md
+|   |-- matching-rules.md
+|   |-- MAXIMUM_UPDATE_DEPTH_FIX.md
+|   |-- PERFORMANCE_OPTIMIZATIONS.md
+|   |-- PLAN_GENERATION_ERROR_FIXES.md
+|   |-- PLAN_GENERATION_FIXES.md
+|   |-- PROFILE_AUTO_SAVE_AND_NAVIGATION.md
+|   |-- PROFILE_COMPLETENESS_VALUE_EXPLANATION.md
+|   |-- PROFILE_PAGE_IMPROVEMENTS_FINAL.md
+|   |-- PROFILE_SIMPLIFICATION.md
+|   |-- PROJECT_TREE.txt
+|   |-- PUBLIC_TRANSPORT_FIXES.md
+|   |-- PUBLIC_TRANSPORT_SETUP.md
+|   |-- QUALITY_DIVERSITY_SYSTEM.md
+|   |-- REALISTIC_PLANNING_IMPROVEMENTS.md
+|   |-- RENDER_ERROR_FIXES.md
+|   |-- ROBUST_LOCATION_DETECTION_IMPLEMENTATION.md
+|   |-- TEXT_SIZE_CONSOLE_ERROR_FIX.md
+|   |-- THEME_FUNCTIONALITY_FIX.md
+|   |-- TIME_DURATION_LIMIT_UPDATE.md
+|   |-- TRANSPORT_BUTTONS_REDESIGN.md
+|   |-- TRANSPORT_MODE_FIXES.md
+|   |-- TRANSPORT_STRUCTURE_REDESIGN.md
+|   |-- tree.txt
+|   |-- troubleshooting-reanimated.md
+|   |-- ULTRA_REALISTIC_ALGORITHM.md
+|   |-- USER_PROFILE_ENHANCEMENTS.md
+|   |-- USER_PROFILE_IMPROVEMENTS_ANALYSIS.md
+|   |-- UX_ENHANCEMENTS_FINAL.md
+|   |-- UX_IMPROVEMENTS_COMPREHENSIVE.md
+|   |-- VISUAL_CUSTOMIZATION_IMPLEMENTATION.md
+|   |-- WIDGET_DEBUGGING_INVESTIGATION.md
+|-- hooks/
+|   |-- useColorScheme.ts
+|   |-- useColorScheme.web.ts
+|   |-- useThemeColor.ts
+|   |-- useWeather.ts
+|-- lib/
+|   |-- auth.tsx
+|   |-- autoplan.ts
+|   |-- errorHandler.ts
+|   |-- favorites.ts
+|   |-- i18n.ts
+|   |-- locationService.ts
+|   |-- neighborhoods.ts
+|   |-- networkManager.ts
+|   |-- performanceMonitor.ts
+|   |-- planTypes.ts
+|   |-- store.ts
+|   |-- theme.ts
+|   |-- ThemeProvider.tsx
+|-- scripts/
+|   |-- check-babel.js
+|   |-- reset-project.js
+|   |-- test-transit.js
+|   |-- update-home-i18n.js
+|   |-- update-results-i18n.js
+|-- utils/
+|   |-- fetchWithTimeout.ts
+|   |-- generatePlansReal.ts
+|   |-- generatePlansSimple.ts
+|   |-- overpass.ts
+|   |-- planRadius.ts
+|   |-- routing.ts
+|   |-- transitConfig.ts
+|   |-- transitRouter.ts
+|   |-- weatherMessage.ts
+|-- web/
+|   |-- mapHtml.ts
