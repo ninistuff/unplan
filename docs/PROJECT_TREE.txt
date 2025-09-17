@@ -1,0 +1,78 @@
+unplan/
+├── .env
+├── .env.example
+├── .gitignore
+├── .nvmrc
+├── app.json
+├── babel.config.js
+├── debug-test.html
+├── eslint.config.js
+├── expo-env.d.ts
+├── package-lock.json
+├── package.json
+├── README.md
+├── test-generator.js
+├── tsconfig.json
+├── .expo/
+│   ├── devices.json
+│   ├── README.md
+│   ├── cache/
+│   ├── types/
+│   └── web/
+├── .github/
+│   ├── README.md
+│   ├── .github/
+│   └── workflows/
+├── .qodo/
+├── .vscode/
+│   └── settings.json
+├── app/
+│   ├── +not-found.tsx
+│   ├── favorites.tsx
+│   ├── forgot.tsx
+│   ├── home.tsx
+│   ├── index.tsx
+│   ├── login.tsx
+│   ├── profile.tsx
+│   ├── register.tsx
+│   ├── results.tsx
+│   ├── _layout.tsx
+│   ├── plan/
+│   └── _components/
+├── assets/
+│   ├── fonts/
+│   ├── images/
+│   └── lottie/
+├── components/
+│   ├── EnhancedPlanCard.tsx
+│   └── FeedbackSystem.tsx
+├── constants/
+│   ├── Colors.ts
+│   └── theme.ts
+├── docs/
+│   ├── PROJECT_TREE.txt
+│   ├── logs/
+│   └── [multiple .md files]
+├── hooks/
+│   ├── useColorScheme.ts
+│   ├── useColorScheme.web.ts
+│   ├── useThemeColor.ts
+│   └── useWeather.ts
+├── lib/
+│   ├── auth.tsx
+│   ├── autoplan.ts
+│   ├── errorHandler.ts
+│   ├── favorites.ts
+│   ├── i18n.ts
+│   ├── locationService.ts
+│   ├── neighborhoods.ts
+│   ├── networkManager.ts
+│   ├── performanceMonitor.ts
+│   ├── planTypes.ts
+│   ├── store.ts
+│   ├── theme.ts
+│   └── ThemeProvider.tsx
+└── node_modules/
+    ├── .package-lock.json
+    ├── .bin/
+    └── [multiple package directories]
