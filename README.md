@@ -93,6 +93,18 @@ pod install
 npm run doctor
 ```
 
+## Known issues
+
+**Reanimated plugin lipsește uneori după reinstalări.** Soluție: reinstalează dependențele și rulează reset.
+
+**Permisiuni locație blocate pe Android vechi.** Soluție: acordă manual din Setări, apoi retrimite cererea din Home.
+
+**Overpass lovește rate limit la ore de vârf.** Soluție: reîncearcă după câteva secunde.
+
+**OSRM public cade ocazional.** Soluție: fallback pe estimare Haversine.
+
+**Timp de răspuns mare la prima rulare.** Soluție: rulează reset și reîncarcă.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
