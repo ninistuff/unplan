@@ -135,6 +135,10 @@ npm run doctor
 ]
 ```
 
+## Structura proiectului
+
+Vezi arborele la 2 niveluri aici: [https://github.com/ninistuff/unplan/blob/chore/readme-hardening/docs/PROJECT_TREE.txt](https://github.com/ninistuff/unplan/blob/chore/readme-hardening/docs/PROJECT_TREE.txt)
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
