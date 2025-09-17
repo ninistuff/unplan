@@ -35,6 +35,14 @@ Copiază `.env.example` în `.env`. Ajustează URL-urile dacă folosești instan
 
 **Date.** Nu salvăm PII în repo. Rezultatele se păstrează doar local pe sesiune.
 
+## Limite API și retry
+
+**Overpass.** Limită variabilă de trafic. Timeout 12s. Retry cu backoff 1s, 2s, 4s.
+
+**OSRM public.** Fără SLA. Timeout 8s. Un singur retry la 2s. Dacă pică, estimăm distanța cu Haversine.
+
+**Open-Meteo.** Stabil. Timeout 8s. Fallback pe condiție unknown.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
