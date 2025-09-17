@@ -63,6 +63,36 @@ Nu scriem pe disc. Nu există sincronizare remote.
 
 **Timeout.** Arată loader scurt și mesaj de încercare din nou.
 
+## Troubleshooting
+
+**Curăță cache Metro**
+```bash
+npm run reset
+```
+
+**Reinstalează dependențe**
+```bash
+npm run clean
+npm install
+```
+
+**Android emulator nu pornește**
+```bash
+adb kill-server
+adb start-server
+```
+
+**iOS pods**
+```bash
+cd ios
+pod install
+```
+
+**Verificări sănătate**
+```bash
+npm run doctor
+```
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
