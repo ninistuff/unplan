@@ -161,6 +161,14 @@ PR-uri mici cu descriere clară.
 
 Review obligatoriu înainte de merge.
 
+## Licență
+
+Cod sub licență MIT. Vezi fișierul LICENSE.
+
+Date OpenStreetMap sunt sub ODbL. Vezi openstreetmap.org/copyright.
+
+Prognoza meteo folosește Open-Meteo, cu respectarea politicilor lor.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
