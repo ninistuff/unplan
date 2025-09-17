@@ -10,7 +10,6 @@ unplan/
 |-- README.md
 |-- tsconfig.json
 |-- .github/
-|   |-- .github/
 |   |-- README.md
 |   |-- workflows/
 |-- .vscode/
