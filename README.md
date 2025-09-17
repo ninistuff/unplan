@@ -137,7 +137,7 @@ npm run doctor
 
 ## Structura proiectului
 
-Vezi arborele la 2 niveluri aici: [https://github.com/ninistuff/unplan/blob/chore/readme-hardening/docs/PROJECT_TREE.txt](https://github.com/ninistuff/unplan/blob/chore/readme-hardening/docs/PROJECT_TREE.txt)
+Vezi arborele la 2 niveluri aici: [docs/PROJECT_TREE.txt](docs/PROJECT_TREE.txt)
 
 ## Quality gates
 
