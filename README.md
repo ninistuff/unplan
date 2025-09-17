@@ -1,4 +1,4 @@
-[![CI](https://github.com/ninistuff/unplan/actions/workflows/ci.yml/badge.svg)](https://github.com/ninistuff/unplan/actions/workflows/ci.yml)
+[![CI](https://github.com/ninistuff/unplan/actions/workflows/ci.yml/badge.svg)](https://github.com/ninistuff/unplan/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 # Welcome to your Expo app
 
