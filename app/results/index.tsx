@@ -150,7 +150,7 @@ export default function ResultsScreen() {
     }
 
     return { params, appliedFallbacks: fallbackUsed, normalizedLink, seed };
-  }, [rawParams, user?.id]);
+  }, [rawParams]);
 
   const styles = React.useMemo(
     () =>
@@ -235,9 +235,6 @@ export default function ResultsScreen() {
   // Simple toast implementation
   const [toastMessage, setToastMessage] = useState<string>("");
   const [toastVisible, setToastVisible] = useState(false);
-
-  // Get user language preference (memoized for performance)
-  const userLang = useMemo(() => user?.profile?.language || "ro", [user?.profile?.language]);
 
   const options: GenerateOptions = useMemo(() => {
     // Normalize runtime params to GenerateOptions
@@ -687,17 +684,16 @@ export default function ResultsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        onLongPress={() => setDebugVisible(!debugVisible)}
-      >
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
         <FallbackBanner />
         <DebugPanel />
 
-        <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16 }}>
-          {t(lang, "plansFor")}
-          {formatHM(options.duration)}
-        </Text>
+        <Pressable onLongPress={() => setDebugVisible(!debugVisible)}>
+          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16 }}>
+            {t(lang, "plansFor")}
+            {formatHM(options.duration)}
+          </Text>
+        </Pressable>
 
         {/* Timeout Banner */}
         {timeoutBanner && (
