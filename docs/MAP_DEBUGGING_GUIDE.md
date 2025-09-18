@@ -7,11 +7,12 @@ Acest document descrie pașii de debugging implementați pentru a identifica și
 ### 1. **Logging Detaliat în WebView**
 
 **React Native Side (`app/plan/[id].tsx`):**
+
 ```typescript
 const onWebViewLoad = () => {
-  console.log('[PlanDetails] WebView loaded, waiting for map initialization');
+  console.log("[PlanDetails] WebView loaded, waiting for map initialization");
   setTimeout(() => {
-    console.log('[PlanDetails] Injecting renderPlan after delay');
+    console.log("[PlanDetails] Injecting renderPlan after delay");
     webRef.current?.injectJavaScript(`
       try {
         console.log('[WebView] Checking if renderPlan exists:', typeof window.renderPlan);
@@ -32,6 +33,7 @@ const onWebViewLoad = () => {
 ```
 
 **WebView Error Handling:**
+
 ```typescript
 <WebView
   onError={(syntheticEvent) => {
@@ -51,47 +53,52 @@ const onWebViewLoad = () => {
 ### 2. **Logging Detaliat în HTML Map**
 
 **Inițializarea Leaflet:**
+
 ```javascript
-console.log('[MapHTML] Script started, checking Leaflet...');
-console.log('[MapHTML] Leaflet available:', typeof L);
-console.log('[MapHTML] Initializing map...');
-const map = L.map('map', { zoomControl: true });
-console.log('[MapHTML] Map created, adding tile layer...');
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19, attribution:'&copy; OpenStreetMap'
+console.log("[MapHTML] Script started, checking Leaflet...");
+console.log("[MapHTML] Leaflet available:", typeof L);
+console.log("[MapHTML] Initializing map...");
+const map = L.map("map", { zoomControl: true });
+console.log("[MapHTML] Map created, adding tile layer...");
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap",
 }).addTo(map);
-console.log('[MapHTML] Tile layer added, setting initial view...');
+console.log("[MapHTML] Tile layer added, setting initial view...");
 map.setView([45.9432, 24.9668], 6);
-console.log('[MapHTML] Map initialization complete');
+console.log("[MapHTML] Map initialization complete");
 ```
 
 **Confirmarea Funcției renderPlan:**
-```javascript
-console.log('[MapHTML] renderPlan function defined:', typeof window.renderPlan);
 
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('[MapHTML] DOM loaded, map ready for renderPlan calls');
+```javascript
+console.log("[MapHTML] renderPlan function defined:", typeof window.renderPlan);
+
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("[MapHTML] DOM loaded, map ready for renderPlan calls");
 });
 ```
 
 ### 3. **Simplificarea Temporară a Avatarului**
 
 **Avatar Complex (problematic):**
+
 ```javascript
 // Complex avatar with error handling - poate cauza probleme
 var avatarHtml = '<div style="..."><img src="..." onerror="...complex fallback..."/></div>';
 ```
 
 **Avatar Simplificat (pentru debugging):**
+
 ```javascript
 // Simplified user location marker (temporarily removing complex avatar)
-console.log('[MapHTML] Creating start marker, avatar:', avatar ? 'present' : 'none');
+console.log("[MapHTML] Creating start marker, avatar:", avatar ? "present" : "none");
 icon = L.divIcon({
   html: '<div style="width:36px;height:36px;border-radius:50%;background:#16a34a;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px">📍</div>',
   className: "",
-  iconSize: [36,36],
-  iconAnchor: [18,36],
-  popupAnchor: [0,-36]
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
+  popupAnchor: [0, -36],
 });
 ```
 
@@ -100,6 +107,7 @@ icon = L.divIcon({
 ### Pasul 1: Verifică Logs-urile WebView
 
 **Logs-uri de succes așteptate:**
+
 ```
 [PlanDetails] Payload for map: {points: [...], mode: "foot", segments: [], userAvatar: "..."}
 [PlanDetails] WebView load started
@@ -109,6 +117,7 @@ icon = L.divIcon({
 ```
 
 **Logs-uri de eroare posibile:**
+
 ```
 [PlanDetails] WebView error: {description: "...", code: ...}
 [PlanDetails] WebView HTTP error: {statusCode: 404, url: "..."}
@@ -117,6 +126,7 @@ icon = L.divIcon({
 ### Pasul 2: Verifică Logs-urile HTML Map
 
 **Logs-uri de succes așteptate:**
+
 ```
 [MapHTML] Script started, checking Leaflet...
 [MapHTML] Leaflet available: object
@@ -129,6 +139,7 @@ icon = L.divIcon({
 ```
 
 **Logs-uri de eroare posibile:**
+
 ```
 [MapHTML] Leaflet available: undefined  // Leaflet nu s-a încărcat
 [MapHTML] Error in renderPlan: ReferenceError: L is not defined
@@ -137,6 +148,7 @@ icon = L.divIcon({
 ### Pasul 3: Verifică Apelul renderPlan
 
 **Logs-uri de succes așteptate:**
+
 ```
 [WebView] Checking if renderPlan exists: function
 [WebView] Calling renderPlan with payload
@@ -148,6 +160,7 @@ icon = L.divIcon({
 ```
 
 **Logs-uri de eroare posibile:**
+
 ```
 [WebView] renderPlan function not found
 [WebView] renderPlan error: SyntaxError: Unexpected token
@@ -159,11 +172,13 @@ icon = L.divIcon({
 ### Problema 1: Leaflet Nu Se Încarcă
 
 **Simptome:**
+
 ```
 [MapHTML] Leaflet available: undefined
 ```
 
 **Soluții:**
+
 - Verifică conexiunea la internet
 - Verifică dacă CDN-ul Leaflet este accesibil
 - Încearcă o versiune diferită de Leaflet
@@ -171,11 +186,13 @@ icon = L.divIcon({
 ### Problema 2: renderPlan Nu Există
 
 **Simptome:**
+
 ```
 [WebView] renderPlan function not found
 ```
 
 **Soluții:**
+
 - Verifică dacă script-ul HTML se execută complet
 - Adaugă delay mai mare înainte de apelul renderPlan
 - Verifică dacă există erori de sintaxă în HTML
@@ -183,11 +200,13 @@ icon = L.divIcon({
 ### Problema 3: Erori de Parsing JSON
 
 **Simptome:**
+
 ```
 [WebView] renderPlan error: SyntaxError: Unexpected token
 ```
 
 **Soluții:**
+
 - Verifică dacă payload-ul conține caractere speciale
 - Escape-uiește corect string-urile în JSON
 - Verifică dacă avatarUri conține caractere problematice
@@ -195,12 +214,14 @@ icon = L.divIcon({
 ### Problema 4: Markerii Nu Apar
 
 **Simptome:**
+
 ```
 [MapHTML] Successfully displayed 3 location markers
 // Dar markerii nu sunt vizibili
 ```
 
 **Soluții:**
+
 - Verifică dacă coordonatele sunt valide
 - Verifică dacă harta se centrează corect
 - Verifică CSS-ul pentru markeri

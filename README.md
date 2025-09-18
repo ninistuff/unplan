@@ -11,22 +11,27 @@ Android. iOS. Web în plan. Testarea curentă se face pe emulator Android și pe
 Node 20 LTS. NPM 10. Expo CLI global.
 
 ### Instalare
+
 ```bash
 npm install
 ```
 
 ### Rulare
+
 ```bash
 npm start
 ```
 
 ### Android
+
 Pornește un emulator din Android Studio. Apasă `a` în Expo.
 
 ### iOS
+
 Necesită macOS și Xcode. Apasă `i` în Expo.
 
 ### Variabile
+
 Copiază `.env.example` în `.env`. Ajustează URL-urile dacă folosești instanțe proprii.
 
 ## Permisiuni și refuz
@@ -66,29 +71,34 @@ Nu scriem pe disc. Nu există sincronizare remote.
 ## Troubleshooting
 
 **Curăță cache Metro**
+
 ```bash
 npm run reset
 ```
 
 **Reinstalează dependențe**
+
 ```bash
 npm run clean
 npm install
 ```
 
 **Android emulator nu pornește**
+
 ```bash
 adb kill-server
 adb start-server
 ```
 
 **iOS pods**
+
 ```bash
 cd ios
 pod install
 ```
 
 **Verificări sănătate**
+
 ```bash
 npm run doctor
 ```
@@ -208,7 +218,6 @@ You can continue without granting location, and the app falls back to Bucharest.
 If you run an OpenTripPlanner (OTP) instance, you can enable public transport routing for the first legs between POIs.
 
 - Set an environment variable with your OTP base URL when starting Metro:
-
   - `OTP_BASE_URL` or `EXPO_PUBLIC_OTP_BASE_URL`
 
   Example: `EXPO_PUBLIC_OTP_BASE_URL=https://your-otp-host` then `npx expo start`
@@ -244,4 +253,3 @@ Join our community of developers creating universal apps.
 Citește ghidul de lucru: vezi CONTRIBUTING.md.
 
 Respectă Codul de conduită: vezi CODE_OF_CONDUCT.md.
-

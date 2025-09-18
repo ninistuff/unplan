@@ -14,6 +14,7 @@ This document summarizes all the improvements made to resolve public transport r
 ### 1. Enhanced Transit Router (`utils/transitRouter.ts`)
 
 **New Features:**
+
 - ✅ Improved error handling with detailed logging
 - ✅ Better timeout management (configurable)
 - ✅ Enhanced data structures with duration, distance, and route info
@@ -21,6 +22,7 @@ This document summarizes all the improvements made to resolve public transport r
 - ✅ Automatic environment variable detection
 
 **New Functions:**
+
 - `planTransitRoute()` - Main function with automatic fallback
 - `planTransitFallback()` - Heuristic-based routing when OTP unavailable
 - `TransitRouteResult` interface - Enhanced result structure
@@ -28,6 +30,7 @@ This document summarizes all the improvements made to resolve public transport r
 ### 2. Configuration Management (`utils/transitConfig.ts`)
 
 **New Features:**
+
 - ✅ Centralized transit configuration
 - ✅ Environment variable validation
 - ✅ OTP server connectivity testing
@@ -35,6 +38,7 @@ This document summarizes all the improvements made to resolve public transport r
 - ✅ Setup instruction generation
 
 **Key Functions:**
+
 - `getTransitConfig()` - Get current configuration
 - `testOTPConnection()` - Test server connectivity
 - `isOTPConfigured()` - Check if OTP is properly set up
@@ -43,6 +47,7 @@ This document summarizes all the improvements made to resolve public transport r
 ### 3. Simplified Transit Logic (`utils/generatePlans.ts`)
 
 **Improvements:**
+
 - ✅ Replaced complex `enrich2()` function with simplified `enrichTransitShapesWithTimeout()`
 - ✅ Improved `applyOtp()` function with better error handling
 - ✅ Parallel processing for better performance
@@ -51,11 +56,13 @@ This document summarizes all the improvements made to resolve public transport r
 ### 4. Debug and Testing Tools
 
 **New Files:**
+
 - `scripts/test-transit.js` - Command-line testing script
 - `app/components/TransitDebugPanel.tsx` - In-app debug panel
 - `docs/PUBLIC_TRANSPORT_SETUP.md` - Comprehensive setup guide
 
 **Features:**
+
 - ✅ OTP connectivity testing
 - ✅ Route planning testing
 - ✅ Configuration status display
@@ -87,6 +94,7 @@ node scripts/test-transit.js
 ### 3. Access Debug Panel
 
 In the app:
+
 1. Long-press the profile button (bottom right)
 2. Debug panel will open
 3. Test OTP connection and route planning
@@ -123,6 +131,7 @@ The improved system provides detailed error messages:
 ### Console Logs
 
 Look for these log prefixes:
+
 - `[TransitRouter]` - Transit routing operations
 - `[TransitConfig]` - Configuration status
 - `[GeneratePlans]` - Plan generation with transit
@@ -130,6 +139,7 @@ Look for these log prefixes:
 ### Debug Panel
 
 Access via long-press on profile button:
+
 - Configuration status
 - OTP connectivity test
 - Route planning test
@@ -138,11 +148,13 @@ Access via long-press on profile button:
 ## Files Modified
 
 ### Core Files
+
 - `utils/transitRouter.ts` - Enhanced with fallback and better error handling
 - `utils/generatePlans.ts` - Simplified complex transit logic
 - `app/index.tsx` - Added debug panel access
 
 ### New Files
+
 - `utils/transitConfig.ts` - Configuration management
 - `app/components/TransitDebugPanel.tsx` - Debug interface
 - `scripts/test-transit.js` - Testing script
@@ -152,11 +164,13 @@ Access via long-press on profile button:
 ## Testing
 
 ### Automated Testing
+
 ```bash
 node scripts/test-transit.js
 ```
 
 ### Manual Testing
+
 1. Set OTP_BASE_URL environment variable
 2. Start app with `npx expo start`
 3. Select "Transport public" option
@@ -164,6 +178,7 @@ node scripts/test-transit.js
 5. Use debug panel for detailed testing
 
 ### Test Scenarios
+
 - ✅ OTP configured and working
 - ✅ OTP configured but server down
 - ✅ OTP not configured (fallback only)
@@ -181,6 +196,7 @@ node scripts/test-transit.js
 ## Support
 
 If issues persist:
+
 1. Check console logs for detailed error messages
 2. Use the debug panel to test connectivity
 3. Verify OTP server is working with direct API calls

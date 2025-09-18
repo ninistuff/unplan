@@ -5,11 +5,13 @@ Acest document descrie identificarea și repararea erorii "Maximum update depth 
 ## 🚨 **EROAREA IDENTIFICATĂ**
 
 ### **Console Error:**
+
 ```
 Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, one of the dependencies changes on every render.
 ```
 
 ### **Simptomele:**
+
 - **Aplicația se blochează** la încărcarea paginii de profil
 - **Console-ul se umple** cu erori de update depth
 - **Performance degradat** - re-render-uri infinite
@@ -20,13 +22,14 @@ Maximum update depth exceeded. This can happen when a component calls setState i
 ### **Cauza Principală: Buclă de Sincronizare**
 
 #### **Fluxul Problematic:**
+
 ```typescript
 // 1. useEffect în profile.tsx
 useEffect(() => {
-  setLocal(prev => ({
+  setLocal((prev) => ({
     ...prev,
-    theme: themeMode,      // Actualizează local state
-    textSize: textSize
+    theme: themeMode, // Actualizează local state
+    textSize: textSize,
   }));
 }, [themeMode, textSize]);
 
@@ -34,26 +37,27 @@ useEffect(() => {
 useFocusEffect(() => {
   return () => {
     if (JSON.stringify(local) !== JSON.stringify(user.profile)) {
-      updateProfile(local);  // Salvează profilul
+      updateProfile(local); // Salvează profilul
     }
   };
-}, [local, user?.profile, updateProfile]);  // local se schimbă!
+}, [local, user?.profile, updateProfile]); // local se schimbă!
 
 // 3. ThemeProvider useEffect
 useEffect(() => {
   if (user?.profile?.theme) {
-    setThemeModeState(user.profile.theme);  // Actualizează tema
+    setThemeModeState(user.profile.theme); // Actualizează tema
   }
 }, [user?.profile?.theme]);
 
 // 4. setThemeMode function
 const setThemeMode = (mode: ThemeMode) => {
   setThemeModeState(mode);
-  updateProfile({ theme: mode });  // Actualizează profilul din nou!
+  updateProfile({ theme: mode }); // Actualizează profilul din nou!
 };
 ```
 
 #### **Bucla Infinită:**
+
 ```
 1. useEffect actualizează local state cu themeMode
 2. local state se schimbă → useFocusEffect detectează schimbarea
@@ -69,18 +73,20 @@ const setThemeMode = (mode: ThemeMode) => {
 ### **1. 🗑️ Eliminarea Sincronizării Redundante**
 
 #### **❌ Înainte - Problematic:**
+
 ```typescript
 // profile.tsx - Sincronizare redundantă
 useEffect(() => {
-  setLocal(prev => ({
+  setLocal((prev) => ({
     ...prev,
-    theme: themeMode,      // Creează buclă!
-    textSize: textSize
+    theme: themeMode, // Creează buclă!
+    textSize: textSize,
   }));
 }, [themeMode, textSize]);
 ```
 
 #### **✅ După - Eliminat:**
+
 ```typescript
 // profile.tsx - Fără sincronizare
 // No need to sync - we'll use themeMode and textSize directly from ThemeProvider
@@ -89,27 +95,29 @@ useEffect(() => {
 ### **2. 💾 Optimizarea Auto-Save**
 
 #### **❌ Înainte - Salvare din local state:**
+
 ```typescript
 useFocusEffect(() => {
   return () => {
     if (JSON.stringify(local) !== JSON.stringify(user.profile)) {
-      updateProfile(local);  // local poate fi outdated
+      updateProfile(local); // local poate fi outdated
     }
   };
 }, [local, user?.profile, updateProfile]);
 ```
 
 #### **✅ După - Salvare cu valori actuale:**
+
 ```typescript
 useFocusEffect(() => {
   return () => {
     if (user?.profile) {
       const profileToSave = {
         ...local,
-        theme: themeMode,      // Valori actuale din ThemeProvider
-        textSize: textSize
+        theme: themeMode, // Valori actuale din ThemeProvider
+        textSize: textSize,
       };
-      
+
       if (JSON.stringify(profileToSave) !== JSON.stringify(user.profile)) {
         updateProfile(profileToSave);
       }
@@ -121,15 +129,17 @@ useFocusEffect(() => {
 ### **3. 🔄 Eliminarea Update-ului Dublu**
 
 #### **❌ Înainte - Update imediat:**
+
 ```typescript
 // ThemeProvider.tsx - Update dublu
 const setThemeMode = (mode: ThemeMode) => {
   setThemeModeState(mode);
-  updateProfile({ theme: mode });  // Update imediat + auto-save
+  updateProfile({ theme: mode }); // Update imediat + auto-save
 };
 ```
 
 #### **✅ După - Doar state update:**
+
 ```typescript
 // ThemeProvider.tsx - Doar state update
 const setThemeMode = (mode: ThemeMode) => {
@@ -141,6 +151,7 @@ const setThemeMode = (mode: ThemeMode) => {
 ## 📊 **FLUXUL OPTIMIZAT**
 
 ### **Noul Flux Fără Bucle:**
+
 ```
 1. Utilizatorul apasă butonul temei
 2. setThemeMode actualizează doar themeMode state
@@ -157,6 +168,7 @@ const setThemeMode = (mode: ThemeMode) => {
 ### **Înainte vs După:**
 
 #### **❌ Înainte - Problematic:**
+
 - **Bucle infinite** - Maximum update depth exceeded
 - **Performance degradat** - re-render-uri constante
 - **Experiență blocată** - aplicația se înghețează
@@ -164,6 +176,7 @@ const setThemeMode = (mode: ThemeMode) => {
 - **Instabilitate** - crash-uri posibile
 
 #### **✅ După - Optimizat:**
+
 - **Fără bucle** - 0 erori de update depth
 - **Performance excelent** - re-render doar când e necesar
 - **Experiență fluidă** - schimbări instantanee
@@ -173,12 +186,14 @@ const setThemeMode = (mode: ThemeMode) => {
 ## 🧪 **TESTAREA FIX-ULUI**
 
 ### **Test 1: Schimbarea Temei**
+
 1. **Intră în profil** → Fără erori în console
 2. **Schimbă tema** → Schimbare instantanee, fără lag
 3. **Schimbă din nou** → Fără acumulare de erori
 4. **Ieși din profil** → Salvare automată fără probleme
 
 ### **Test 2: Performance**
+
 1. **Monitorizează console-ul** → Fără erori de update depth
 2. **Verifică re-render-urile** → Doar când e necesar
 3. **Testează pe device** → Fără lag sau freeze
@@ -187,16 +202,19 @@ const setThemeMode = (mode: ThemeMode) => {
 ## 🎯 **PRINCIPIILE APLICATE**
 
 ### **1. 🔄 Single Source of Truth**
+
 - **ThemeProvider** este sursa unică pentru temă și text
 - **Local state** nu mai duplică aceste valori
 - **Auto-save** colectează valorile din sursa unică
 
 ### **2. 💾 Lazy Saving**
+
 - **Schimbările** se aplică instant în UI
 - **Salvarea** se face doar la ieșirea din pagină
 - **Fără update-uri** redundante în timpul utilizării
 
 ### **3. ⚡ Performance First**
+
 - **Minimal re-renders** - doar când e absolut necesar
 - **Efficient updates** - batch operations
 - **Clean dependencies** - fără circularități
@@ -220,6 +238,7 @@ const setThemeMode = (mode: ThemeMode) => {
 4. **Aplicarea principiilor** de Single Source of Truth și Lazy Saving
 
 **Rezultatul:**
+
 - ✅ **0 erori** de maximum update depth
 - ✅ **Performance excelent** - re-render minimal
 - ✅ **Experiență fluidă** - schimbări instantanee

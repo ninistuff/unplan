@@ -15,6 +15,7 @@ Acest document descrie reparațiile efectuate pentru a rezolva problemele cu afi
 ### 1. **Rutare Reală cu OSRM** (`utils/generatePlans.ts`)
 
 **Adăugat:**
+
 - Funcția `calculateRealRoute()` care folosește OSRM pentru rutare reală
 - Funcția `pickByWithTransport()` care selectează POI-uri bazat pe distanțe reale de transport
 - Versiune asincronă a `buildSinglePlan()` care generează planuri cu rute reale
@@ -22,26 +23,35 @@ Acest document descrie reparațiile efectuate pentru a rezolva problemele cu afi
 ### 2. **Corectarea Mapării Modului de Transport** (`utils/generatePlans.ts`)
 
 **Înainte:**
+
 ```typescript
-const mode: Plan["mode"] = opts.transport === "bike" ? "bike" : opts.transport === "car" ? "driving" : "foot";
+const mode: Plan["mode"] =
+  opts.transport === "bike" ? "bike" : opts.transport === "car" ? "driving" : "foot";
 ```
 
 **După:**
+
 ```typescript
-const mode: Plan["mode"] = opts.transport === "bike" ? "bike" : 
-                          opts.transport === "car" ? "driving" : 
-                          opts.transport === "public" ? "foot" : // public transport uses foot for walking segments
-                          "foot";
+const mode: Plan["mode"] =
+  opts.transport === "bike"
+    ? "bike"
+    : opts.transport === "car"
+      ? "driving"
+      : opts.transport === "public"
+        ? "foot" // public transport uses foot for walking segments
+        : "foot";
 ```
 
 ### 2. **Generarea Corectă a Segmentelor** (`utils/generatePlans.ts`)
 
 **Înainte:**
+
 ```typescript
 segments.push({ from: cur, to: found, kind: mode });
 ```
 
 **După:**
+
 ```typescript
 const segmentKind = mode === "driving" ? "driving" : mode === "bike" ? "bike" : "foot";
 segments.push({ from: cur, to: found, kind: segmentKind });
@@ -50,6 +60,7 @@ segments.push({ from: cur, to: found, kind: segmentKind });
 ### 3. **Setarea Corectă a Modului pentru Planuri**
 
 **Adăugat:**
+
 ```typescript
 // Set the correct mode for display purposes
 A.mode = opts.transport === "bike" ? "bike" : opts.transport === "car" ? "driving" : "foot";
@@ -60,19 +71,21 @@ C.mode = opts.transport === "bike" ? "bike" : opts.transport === "car" ? "drivin
 ### 4. **Afișarea Diferențiată pe Hartă** (`web/mapHtml.ts`)
 
 **Înainte:**
+
 ```javascript
 routeLayer = L.geoJSON(route.geometry, {
-  style: { color: "#2563eb", weight: 5, opacity: 0.9, dashArray: dashed ? '6 6' : undefined }
+  style: { color: "#2563eb", weight: 5, opacity: 0.9, dashArray: dashed ? "6 6" : undefined },
 }).addTo(map);
 ```
 
 **După:**
+
 ```javascript
 // Different colors and styles for different transport modes
 let color = "#2563eb"; // default blue
 let weight = 5;
 
-switch(mode) {
+switch (mode) {
   case "driving":
     color = "#dc2626"; // red for car
     weight = 6;
@@ -91,20 +104,28 @@ switch(mode) {
 ### 5. **Calculul Corect al Timpilor de Deplasare**
 
 **Înainte:**
+
 ```typescript
-const speedKmh = (sk: string) => (sk === 'metro' ? 33 : sk === 'bus' ? 18 : sk === 'bike' ? 14 : 4.5);
+const speedKmh = (sk: string) =>
+  sk === "metro" ? 33 : sk === "bus" ? 18 : sk === "bike" ? 14 : 4.5;
 ```
 
 **După:**
+
 ```typescript
 const speedKmh = (sk: string) => {
-  switch(sk) {
-    case 'metro': return 33;
-    case 'bus': return 18;
-    case 'driving': return 28; // average city driving speed
-    case 'bike': return 14;
-    case 'foot':
-    default: return 4.5;
+  switch (sk) {
+    case "metro":
+      return 33;
+    case "bus":
+      return 18;
+    case "driving":
+      return 28; // average city driving speed
+    case "bike":
+      return 14;
+    case "foot":
+    default:
+      return 4.5;
   }
 };
 ```
@@ -112,16 +133,18 @@ const speedKmh = (sk: string) => {
 ### 6. **Gestionarea Corectă a Segmentelor pe Hartă**
 
 **Înainte:**
+
 ```javascript
-var isBike = (s.kind === 'bike');
+var isBike = s.kind === "bike";
 var dashed = !isBike; // foot dashed, bike solid
-await drawRoute([s.from, s.to], isBike ? 'bike' : 'foot', dashed);
+await drawRoute([s.from, s.to], isBike ? "bike" : "foot", dashed);
 ```
 
 **După:**
+
 ```javascript
 var transportMode = s.kind; // 'foot', 'bike', 'driving'
-var dashed = (transportMode === 'foot'); // foot dashed, others solid
+var dashed = transportMode === "foot"; // foot dashed, others solid
 await drawRoute([s.from, s.to], transportMode, dashed);
 ```
 
@@ -129,32 +152,34 @@ await drawRoute([s.from, s.to], transportMode, dashed);
 
 ### Culori și Stiluri pentru Fiecare Tip de Transport:
 
-| Transport | Culoare | Grosime | Stil |
-|-----------|---------|---------|------|
-| **Pe jos** | Gri (`#6b7280`) | 3px | Punctat |
-| **Bicicletă/Trotineta** | Verde (`#16a34a`) | 4px | Solid |
-| **Mașina** | Roșu (`#dc2626`) | 6px | Solid |
-| **Transport Public - Bus** | Portocaliu (`#f59e0b`) | 4px | Solid |
-| **Transport Public - Metro** | Albastru (`#0ea5e9`) | 4px | Solid |
+| Transport                    | Culoare                | Grosime | Stil    |
+| ---------------------------- | ---------------------- | ------- | ------- |
+| **Pe jos**                   | Gri (`#6b7280`)        | 3px     | Punctat |
+| **Bicicletă/Trotineta**      | Verde (`#16a34a`)      | 4px     | Solid   |
+| **Mașina**                   | Roșu (`#dc2626`)       | 6px     | Solid   |
+| **Transport Public - Bus**   | Portocaliu (`#f59e0b`) | 4px     | Solid   |
+| **Transport Public - Metro** | Albastru (`#0ea5e9`)   | 4px     | Solid   |
 
 ### Vitezele de Deplasare:
 
-| Transport | Viteză (km/h) | Utilizare |
-|-----------|---------------|-----------|
-| **Pe jos** | 4.5 | Mers normal |
-| **Bicicletă** | 14 | Pedalare urbană |
-| **Mașina** | 28 | Conducere urbană |
-| **Bus** | 18 | Transport public cu opriri |
-| **Metro** | 33 | Transport rapid |
+| Transport     | Viteză (km/h) | Utilizare                  |
+| ------------- | ------------- | -------------------------- |
+| **Pe jos**    | 4.5           | Mers normal                |
+| **Bicicletă** | 14            | Pedalare urbană            |
+| **Mașina**    | 28            | Conducere urbană           |
+| **Bus**       | 18            | Transport public cu opriri |
+| **Metro**     | 33            | Transport rapid            |
 
 ## 🚌 **Transport Public - Funcționalități Speciale**
 
 ### Segmente Mixte:
+
 - **Mers pe jos la stație**: Gri punctat
 - **Transport public**: Portocaliu (bus) sau albastru (metro) solid
 - **Mers pe jos de la stație**: Gri punctat
 
 ### Iconuri pe Hartă:
+
 - **M** - Stații de metrou
 - **B** - Stații de autobuz
 - **Numere** - POI-uri (puncte de interes)
@@ -209,11 +234,11 @@ După aceste reparații:
 
 ### 🚗 **Diferențe Majore între Tipurile de Transport:**
 
-| Transport | Distanță Max | Rutare | Geometrie | Viteză |
-|-----------|--------------|--------|-----------|--------|
-| **Pe jos** | 1.2 km | Haversine | Simplă | 4.5 km/h |
-| **Bicicletă** | 8 km | OSRM Cycling | Reală | 14 km/h |
-| **Mașina** | 15 km | OSRM Driving | Reală | 28 km/h |
-| **Transport Public** | Variabil | OTP + Fallback | Mixtă | 18-33 km/h |
+| Transport            | Distanță Max | Rutare         | Geometrie | Viteză     |
+| -------------------- | ------------ | -------------- | --------- | ---------- |
+| **Pe jos**           | 1.2 km       | Haversine      | Simplă    | 4.5 km/h   |
+| **Bicicletă**        | 8 km         | OSRM Cycling   | Reală     | 14 km/h    |
+| **Mașina**           | 15 km        | OSRM Driving   | Reală     | 28 km/h    |
+| **Transport Public** | Variabil     | OTP + Fallback | Mixtă     | 18-33 km/h |
 
 Aplicația acum generează planuri reale și diferențiate pentru fiecare tip de transport!

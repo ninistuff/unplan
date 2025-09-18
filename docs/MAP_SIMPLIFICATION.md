@@ -5,6 +5,7 @@ Acest document descrie simplificarea hărții pentru a afișa doar locația util
 ## 🎯 **Obiectivul Simplificării**
 
 Eliminarea traseelor complexe care nu funcționau corect și focusarea pe:
+
 - ✅ **Locația utilizatorului** - Marker clar și vizibil
 - ✅ **POI-urile numerotate** - Obiectivele de vizitat
 - ✅ **Navigație independentă** - Utilizatorul se descurcă singur să ajungă
@@ -14,17 +15,18 @@ Eliminarea traseelor complexe care nu funcționau corect și focusarea pe:
 ### 1. **Dezactivarea Desenării Traseelor**
 
 **Înainte:**
+
 ```javascript
-async function drawRoute(coords, mode, dashed){
+async function drawRoute(coords, mode, dashed) {
   // Complex OSRM routing with different colors and styles
-  const profile = mode === "driving" ? "driving" : (mode === "bike" ? "cycling" : "foot");
+  const profile = mode === "driving" ? "driving" : mode === "bike" ? "cycling" : "foot";
   // ... complex routing logic
 }
 
-async function drawSegments(segments){
+async function drawSegments(segments) {
   // Complex segment drawing with transit and non-transit logic
-  for(const s of segments){
-    if(s.kind === "bus" || s.kind === "metro"){
+  for (const s of segments) {
+    if (s.kind === "bus" || s.kind === "metro") {
       // ... transit segment drawing
     } else {
       // ... other transport drawing
@@ -34,14 +36,15 @@ async function drawSegments(segments){
 ```
 
 **După:**
+
 ```javascript
-async function drawRoute(coords, mode, dashed){
-  console.log('[MapHTML] Route drawing disabled - showing only markers');
+async function drawRoute(coords, mode, dashed) {
+  console.log("[MapHTML] Route drawing disabled - showing only markers");
   return;
 }
 
-async function drawSegments(segs){
-  console.log('[MapHTML] Skipping route drawing - showing only location markers');
+async function drawSegments(segs) {
+  console.log("[MapHTML] Skipping route drawing - showing only location markers");
   return;
 }
 ```
@@ -49,21 +52,36 @@ async function drawSegments(segs){
 ### 2. **Îmbunătățirea Markerilor**
 
 **Stiluri îmbunătățite:**
+
 ```css
-.num-pin{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font:700 16px/1 sans-serif;color:#fff;
-  border:3px solid #fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.25);
+.num-pin {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 16px/1 sans-serif;
+  color: #fff;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
-.num-pin.start { background:#16a34a; }   /* verde pentru Start */
-.num-pin.middle { background:#2563eb; }  /* albastru pentru POI-uri */
-.num-pin.end { background:#dc2626; }     /* roșu pentru Final */
-.num-pin.transit { background:#f59e0b; } /* portocaliu pentru transport */
+.num-pin.start {
+  background: #16a34a;
+} /* verde pentru Start */
+.num-pin.middle {
+  background: #2563eb;
+} /* albastru pentru POI-uri */
+.num-pin.end {
+  background: #dc2626;
+} /* roșu pentru Final */
+.num-pin.transit {
+  background: #f59e0b;
+} /* portocaliu pentru transport */
 ```
 
 **Markeri mai mari și mai vizibili:**
+
 - **Dimensiune**: 32x32px (în loc de 28x28px)
 - **Border**: 3px (în loc de 2px)
 - **Shadow**: Umbră mai pronunțată
@@ -72,18 +90,27 @@ async function drawSegments(segs){
 ### 3. **Marker Special pentru Utilizator**
 
 **Cu avatar:**
+
 ```javascript
-icon = L.divIcon({ 
-  html: '<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25)"><img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover"/></div>', 
-  iconSize: [32,32], iconAnchor: [16,32], popupAnchor: [0,-32] 
+icon = L.divIcon({
+  html:
+    '<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25)"><img src="' +
+    avatar +
+    '" style="width:100%;height:100%;object-fit:cover"/></div>',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
 });
 ```
 
 **Fără avatar:**
+
 ```javascript
-icon = L.divIcon({ 
-  html: '<div class="num-pin start">📍</div>', 
-  iconSize: [32,32], iconAnchor: [16,32], popupAnchor: [0,-32] 
+icon = L.divIcon({
+  html: '<div class="num-pin start">📍</div>',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
 });
 ```
 
@@ -92,6 +119,7 @@ icon = L.divIcon({
 ### 1. **Funcție Simplificată de Planuri**
 
 **Noua funcție `buildSimplifiedPlan`:**
+
 ```typescript
 async function buildSimplifiedPlan(
   id: string,
@@ -99,16 +127,16 @@ async function buildSimplifiedPlan(
   start: LatLng,
   pool: POI[],
   seq: Array<POI["category"]>,
-  transportMode: "foot" | "bike" | "driving"
+  transportMode: "foot" | "bike" | "driving",
 ): Promise<Plan> {
   // Generează doar POI-uri, fără segmente de traseu
   const steps: PlanStep[] = [{ kind: "start", name: "Start", coord: start }];
-  
+
   // Selectează POI-uri bazat pe distanțe adaptive
   const maxDistance = transportMode === "driving" ? 15000 : transportMode === "bike" ? 8000 : 1200;
-  
+
   // ... logica de selecție POI-uri
-  
+
   // Returnează plan fără segmente de traseu
   return { id, title, steps, mode: transportMode, stops, km, routeSegments: [] };
 }
@@ -117,6 +145,7 @@ async function buildSimplifiedPlan(
 ### 2. **Logică Simplificată de Generare**
 
 **Înainte:**
+
 ```typescript
 // Complex logic with different functions for each transport type
 if (opts.transport === "public") {
@@ -135,24 +164,26 @@ if (opts.transport === "public") {
 ```
 
 **După:**
+
 ```typescript
 // Unified simple logic for all transport types
 const [A, B, C] = await Promise.all([
   buildSimplifiedPlan("A", "Plan A", center, [...pois], seqA2, transportMode),
   buildSimplifiedPlan("B", "Plan B", center, [...pois], seqB2, transportMode),
-  buildSimplifiedPlan("C", "Plan C", center, [...pois], seqC2, transportMode)
+  buildSimplifiedPlan("C", "Plan C", center, [...pois], seqC2, transportMode),
 ]);
 ```
 
 ### 3. **Dezactivarea Procesării Traseelor**
 
 **Înainte:**
+
 ```typescript
 // Complex route enrichment and OTP processing
 const enriched = await Promise.all([
   enrichTransitShapesWithTimeout(A),
   enrichTransitShapesWithTimeout(B),
-  enrichTransitShapesWithTimeout(C)
+  enrichTransitShapesWithTimeout(C),
 ]);
 
 if (opts.transport === "public") {
@@ -163,6 +194,7 @@ if (opts.transport === "public") {
 ```
 
 **După:**
+
 ```typescript
 // Skip all route processing
 console.log(`[GeneratePlans] Skipping route enrichment and OTP for simplified marker-only plans`);
@@ -179,6 +211,7 @@ const finalPlans = [A, B, C];
 4. **3️⃣ Al treilea POI** - Marker albastru cu numărul 3
 
 ### Fără:
+
 - ❌ Linii de traseu (punctate sau solide)
 - ❌ Segmente de transport public
 - ❌ Rute OSRM complexe
@@ -211,22 +244,24 @@ const finalPlans = [A, B, C];
 
 ## 📊 **Beneficii**
 
-| Aspect | Înainte | După |
-|--------|---------|------|
-| **Complexitate** | Foarte mare | Simplă |
-| **Performanță** | Lentă (OSRM, OTP) | Rapidă |
-| **Fiabilitate** | Probleme frecvente | Stabilă |
-| **Claritate** | Confuză | Clară |
+| Aspect              | Înainte              | După         |
+| ------------------- | -------------------- | ------------ |
+| **Complexitate**    | Foarte mare          | Simplă       |
+| **Performanță**     | Lentă (OSRM, OTP)    | Rapidă       |
+| **Fiabilitate**     | Probleme frecvente   | Stabilă      |
+| **Claritate**       | Confuză              | Clară        |
 | **Utilizabilitate** | Dependentă de trasee | Independentă |
 
 ## 🎯 **Experiența Utilizatorului**
 
 ### Înainte:
+
 - Utilizatorul aștepta trasee complexe care nu funcționau
 - Confuzie cu linii diferite și segmente mixte
 - Dependență de servicii externe (OSRM, OTP)
 
 ### După:
+
 - Utilizatorul vede imediat unde să meargă
 - Markeri clari și numerotați
 - Navigație independentă cu aplicații dedicate (Google Maps, Waze)

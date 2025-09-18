@@ -55,4 +55,3 @@
   - Planul nu depășește durata; include timpii pe drum
   - Fiecare oprire are nume real (fără „Unnamed”), fără cimitir/spații verzi generice
   - Ordine conform vremii; distanțe realiste; buget ≤ total; necunoscutele marcate
-
