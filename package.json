@@ -18,7 +18,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "echo No tests yet && exit 0",
     "reset": "expo start -c",
-    "clean": "rimraf node_modules package-lock.json"
+    "clean": "rimraf node_modules package-lock.json",
+    "format": "npx prettier --write .",
+    "format:check": "npx prettier --check ."
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
