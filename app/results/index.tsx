@@ -1,7 +1,9 @@
 // app/results/index.tsx
 import { useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FLATLIST_CONFIG } from "../../lib/constants";
 import {
+  FlatList,
   InteractionManager,
   Platform,
   Pressable,
@@ -31,6 +33,7 @@ export default function ResultsScreen() {
   const inFlight = useRef(false);
   const cancelledRef = useRef(false);
   const requestKeyRef = useRef<string>("");
+  const currentControllerRef = useRef<AbortController | null>(null);
   const [timeoutBanner, setTimeoutBanner] = useState(false);
 
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -281,6 +284,100 @@ export default function ResultsScreen() {
     } as GenerateOptions;
   }, [params, user?.profile]);
 
+  // Memoized data and callbacks - must be at top level to avoid conditional hooks
+  const shown = useMemo(() => {
+    return Array.isArray(plans)
+      ? plans.filter((p) => (p.steps || []).some((s) => s.kind === "poi"))
+      : [];
+  }, [plans]);
+
+  // Memoized render function for FlatList
+  const renderPlanItem = useCallback(
+    ({ item: plan, index }: { item: any; index: number }) => {
+      const isFav = favs.keys.has(keyForPlan(plan));
+      return (
+        <PlanCard
+          key={String(plan.id ?? index)}
+          plan={plan}
+          index={index}
+          isFavorite={isFav}
+          lang={lang}
+          units={units}
+          onToggleFavorite={favs.toggle}
+        />
+      );
+    },
+    [favs.keys, favs.toggle, lang, units],
+  );
+
+  // Stable key extractor for FlatList
+  const keyExtractor = useCallback((item: any, index: number) => {
+    return String(item.id ?? index);
+  }, []);
+
+  // Header component for FlatList
+  const ListHeaderComponent = useCallback(
+    () => (
+      <>
+        <FallbackBanner />
+        <DebugPanel />
+
+        <Pressable onLongPress={() => setDebugVisible(!debugVisible)}>
+          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16 }}>
+            {t(lang, "plansFor")}
+            {formatHM(options.duration)}
+          </Text>
+        </Pressable>
+
+        {/* Timeout Banner */}
+        {timeoutBanner && (
+          <View
+            style={{
+              backgroundColor: "#fecaca",
+              borderColor: "#fecaca",
+              borderWidth: 1,
+              padding: 10,
+              borderRadius: 8,
+              marginBottom: 16,
+            }}
+          >
+            <Text style={{ color: "#7f1d1d", fontSize: 12, marginBottom: 6 }}>
+              {lang === "ro"
+                ? "Rețea lentă — am folosit un fallback local."
+                : "Slow network — used local fallback."}
+            </Text>
+            <Pressable
+              onPress={load}
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor: "#991b1b",
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 6,
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>
+                {t(lang, "retry")}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [debugVisible, lang, options.duration, timeoutBanner, load],
+  );
+
+  // Cleanup function for AbortController and timeouts
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      if (currentControllerRef.current) {
+        currentControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const load = useCallback(async () => {
     if (inFlight.current) return;
     inFlight.current = true;
@@ -298,6 +395,7 @@ export default function ResultsScreen() {
 
     requestKeyRef.current = normalizedLink;
     const controller = new AbortController();
+    currentControllerRef.current = controller;
     const sig = controller.signal;
     const guard = setTimeout(() => {
       if (inFlight.current && !cancelledRef.current) {
@@ -396,6 +494,25 @@ export default function ResultsScreen() {
       inFlight.current = false;
     }
   }, [options, normalizedLink, lang, user?.profile?.language]);
+
+  // Debounced load function for filter changes (available for future use)
+  // const debouncedLoad = useCallback(() => {
+  //   // Cancel any existing debounce timeout
+  //   if (debounceTimeoutRef.current) {
+  //     clearTimeout(debounceTimeoutRef.current);
+  //   }
+  //
+  //   // Cancel any existing request
+  //   if (currentControllerRef.current) {
+  //     currentControllerRef.current.abort();
+  //     currentControllerRef.current = null;
+  //   }
+  //
+  //   // Set new debounce timeout
+  //   debounceTimeoutRef.current = setTimeout(() => {
+  //     load();
+  //   }, DEBOUNCE_MS);
+  // }, [load]);
 
   useEffect(() => {
     if (inFlight.current) return;
@@ -650,10 +767,6 @@ export default function ResultsScreen() {
   }
   // DEBUG END
 
-  const shown = Array.isArray(plans)
-    ? plans.filter((p) => (p.steps || []).some((s) => s.kind === "poi"))
-    : [];
-
   console.log(
     "[Results] will render",
     shown.map((p) => p.steps.length),
@@ -684,66 +797,18 @@ export default function ResultsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8fafc" }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
-        <FallbackBanner />
-        <DebugPanel />
-
-        <Pressable onLongPress={() => setDebugVisible(!debugVisible)}>
-          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16 }}>
-            {t(lang, "plansFor")}
-            {formatHM(options.duration)}
-          </Text>
-        </Pressable>
-
-        {/* Timeout Banner */}
-        {timeoutBanner && (
-          <View
-            style={{
-              backgroundColor: "#fecaca",
-              borderColor: "#fecaca",
-              borderWidth: 1,
-              padding: 10,
-              borderRadius: 8,
-            }}
-          >
-            <Text style={{ color: "#7f1d1d", fontSize: 12, marginBottom: 6 }}>
-              {lang === "ro"
-                ? "Rețea lentă — am folosit un fallback local."
-                : "Slow network — used local fallback."}
-            </Text>
-            <Pressable
-              onPress={load}
-              style={{
-                alignSelf: "flex-start",
-                backgroundColor: "#991b1b",
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 6,
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>
-                {t(lang, "retry")}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-
-        {shown.map((plan, idx) => {
-          const isFav = favs.keys.has(keyForPlan(plan));
-
-          return (
-            <PlanCard
-              key={String(plan.id ?? idx)}
-              plan={plan}
-              index={idx}
-              isFavorite={isFav}
-              lang={lang}
-              units={units}
-              onToggleFavorite={favs.toggle}
-            />
-          );
-        })}
-      </ScrollView>
+      <FlatList
+        data={shown}
+        renderItem={renderPlanItem}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={ListHeaderComponent}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        initialNumToRender={FLATLIST_CONFIG.INITIAL_NUM_TO_RENDER}
+        windowSize={FLATLIST_CONFIG.WINDOW_SIZE}
+        maxToRenderPerBatch={FLATLIST_CONFIG.MAX_TO_RENDER_PER_BATCH}
+        removeClippedSubviews={FLATLIST_CONFIG.REMOVE_CLIPPED_SUBVIEWS}
+        getItemLayout={undefined} // Let FlatList calculate automatically
+      />
 
       {/* Simple Toast */}
       {toastVisible && (
