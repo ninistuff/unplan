@@ -29,5 +29,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Expo Doctor
+        run: npm run doctor
+
       - name: Tests
         run: npm test

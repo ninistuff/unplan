@@ -1,28 +1,29 @@
 // Tipuri Overpass
 // utils/overpass.ts
-import type { POI } from "../lib/planTypes"
-import { fetchWithTimeout } from "./fetchWithTimeout"
+import type { POI } from "../lib/planTypes";
+import { fetchWithTimeout } from "./fetchWithTimeout";
+import { POI_LIMIT_PER_CATEGORY, POI_FILTER_CONFIG, OPENING_HOURS_STATUS } from "../lib/constants";
 
-export type OverpassElementType = 'node' | 'way' | 'relation'
+export type OverpassElementType = "node" | "way" | "relation";
 
 export interface OverpassCenter {
-  lat: number
-  lon: number
+  lat: number;
+  lon: number;
 }
 
 export interface OverpassElement {
-  type: OverpassElementType
-  id: number
-  lat?: number
-  lon?: number
-  center?: OverpassCenter
-  tags?: Record<string, string>
-  nodes?: number[]
-  geometry?: { lat: number; lon: number }[]
+  type: OverpassElementType;
+  id: number;
+  lat?: number;
+  lon?: number;
+  center?: OverpassCenter;
+  tags?: Record<string, string>;
+  nodes?: number[];
+  geometry?: { lat: number; lon: number }[];
 }
 
 export interface OverpassResponse {
-  elements: OverpassElement[]
+  elements: OverpassElement[];
 }
 
 const ENDPOINTS = [
@@ -32,12 +33,28 @@ const ENDPOINTS = [
 ] as const;
 
 export type OverpassCategory =
-  | "cafe" | "restaurant" | "fast_food" | "tea_room"
-  | "bar" | "pub"
-  | "cinema" | "library" | "museum" | "gallery"
-  | "zoo" | "aquarium" | "attraction"
-  | "fitness_centre" | "sports_centre" | "bowling_alley" | "escape_game" | "swimming_pool" | "climbing_indoor"
-  | "arcade" | "karaoke" | "spa"
+  | "cafe"
+  | "restaurant"
+  | "fast_food"
+  | "tea_room"
+  | "bar"
+  | "pub"
+  | "cinema"
+  | "library"
+  | "museum"
+  | "gallery"
+  | "zoo"
+  | "aquarium"
+  | "attraction"
+  | "fitness_centre"
+  | "sports_centre"
+  | "bowling_alley"
+  | "escape_game"
+  | "swimming_pool"
+  | "climbing_indoor"
+  | "arcade"
+  | "karaoke"
+  | "spa"
   | "park";
 
 const tagMap: Record<OverpassCategory, string[]> = {
@@ -66,7 +83,11 @@ const tagMap: Record<OverpassCategory, string[]> = {
   park: ['leisure="park"'],
 };
 
-function bboxFromCenter(lat: number, lon: number, radiusMeters = 1200) {
+function bboxFromCenter(
+  lat: number,
+  lon: number,
+  radiusMeters = POI_FILTER_CONFIG.BOUNDING_BOX_RADIUS_KM * 1000,
+) {
   const dLat = radiusMeters / 111320;
   const dLon = radiusMeters / (111320 * Math.cos((lat * Math.PI) / 180));
   return { s: lat - dLat, w: lon - dLon, n: lat + dLat, e: lon + dLon };
@@ -74,27 +95,33 @@ function bboxFromCenter(lat: number, lon: number, radiusMeters = 1200) {
 function nameValid(name: any): boolean {
   if (typeof name !== "string") return false;
   const n = name.trim();
-  if (n.length < 3) return false;
+  if (n.length < POI_FILTER_CONFIG.REQUIRED_NAME_MIN_LENGTH) return false;
   if (/^unnamed/i.test(n)) return false;
   return true;
 }
 
 function isExcludedGeneric(tags: any): boolean {
   const landuse = tags?.landuse;
-  if (["cemetery", "grass", "meadow", "greenfield", "construction", "industrial", "farmland"].includes(landuse)) return true;
+  if (POI_FILTER_CONFIG.EXCLUDED_POI_TYPES.includes(landuse)) return true;
   if (tags?.amenity === "grave_yard") return true;
+  if (tags?.natural === "forest") return true;
   return false;
 }
 
-function parseOpeningHoursSimple(opening_hours: string | undefined, now = new Date()): "open" | "closed" | "unknown" {
+function parseOpeningHoursSimple(
+  opening_hours: string | undefined,
+  now = new Date(),
+): (typeof OPENING_HOURS_STATUS)[keyof typeof OPENING_HOURS_STATUS] {
   if (!opening_hours || typeof opening_hours !== "string") return "unknown";
   const txt = opening_hours.trim();
   if (txt === "24/7") return "open";
   // Mo-Su 08:00-22:00 (ignores breaks); also accept 09:00-21:00
   const m = txt.match(/^(Mo-Su)\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/);
   if (m) {
-    const sh = parseInt(m[2], 10), sm = parseInt(m[3], 10);
-    const eh = parseInt(m[4], 10), em = parseInt(m[5], 10);
+    const sh = parseInt(m[2], 10),
+      sm = parseInt(m[3], 10);
+    const eh = parseInt(m[4], 10),
+      em = parseInt(m[5], 10);
     const minutes = now.getHours() * 60 + now.getMinutes();
     const start = sh * 60 + sm;
     const end = eh * 60 + em;
@@ -105,13 +132,12 @@ function parseOpeningHoursSimple(opening_hours: string | undefined, now = new Da
   return "unknown";
 }
 
-
 async function callOverpass(body: string, externalSignal?: AbortSignal) {
   let lastErr: any;
   for (const url of ENDPOINTS) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        if (externalSignal?.aborted) throw new Error('aborted');
+        if (externalSignal?.aborted) throw new Error("aborted");
         const res = await fetchWithTimeout(url, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=UTF-8" },
@@ -120,8 +146,8 @@ async function callOverpass(body: string, externalSignal?: AbortSignal) {
           externalSignal,
         });
         if (!res.ok) throw new Error(`Overpass ${res.status}`);
-        const data: OverpassResponse = await res.json() 
-        return data
+        const data: OverpassResponse = await res.json();
+        return data;
       } catch (e) {
         lastErr = e;
         if (externalSignal?.aborted) throw e;
@@ -210,10 +236,10 @@ function parseElements(elements: any[]): POI[] {
 export async function fetchPOIsAround(
   center: { lat: number; lon: number },
   cats: OverpassCategory[],
-  radiusMeters = 1200,
-  limitPerCat = 15,
+  radiusMeters = POI_FILTER_CONFIG.BOUNDING_BOX_RADIUS_KM * 1000,
+  limitPerCat = POI_LIMIT_PER_CATEGORY,
   signal?: AbortSignal,
-  stats?: { raw: number; filtered: number }
+  stats?: { raw: number; filtered: number },
 ): Promise<POI[]> {
   const bb = bboxFromCenter(center.lat, center.lon, radiusMeters);
   const bbox = `${bb.s},${bb.w},${bb.n},${bb.e}`;
@@ -227,9 +253,13 @@ export async function fetchPOIsAround(
       const json = await callOverpass(ql, signal);
       const elements = Array.isArray(json?.elements) ? json.elements : [];
       const parsed = parseElements(elements);
-      if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
+      if (stats) {
+        stats.raw += elements.length;
+        stats.filtered += parsed.length;
+      }
       all.push(...parsed);
-    } catch { } {
+    } catch {}
+    {
       // skip a failing category; keep others
     }
   }
@@ -243,9 +273,9 @@ export async function fetchPOIsAround(
 export async function fetchPOIsInCity(
   center: { lat: number; lon: number },
   cats: OverpassCategory[],
-  limitPerCat = 25,
+  limitPerCat = POI_LIMIT_PER_CATEGORY,
   signal?: AbortSignal,
-  stats?: { raw: number; filtered: number }
+  stats?: { raw: number; filtered: number },
 ): Promise<POI[]> {
   const all: POI[] = [];
   for (const cat of cats) {
@@ -262,9 +292,13 @@ out center ${limitPerCat};`;
       const json = await callOverpass(ql, signal);
       const elements = Array.isArray(json?.elements) ? json.elements : [];
       const parsed = parseElements(elements);
-      if (stats) { stats.raw += elements.length; stats.filtered += parsed.length; }
+      if (stats) {
+        stats.raw += elements.length;
+        stats.filtered += parsed.length;
+      }
       all.push(...parsed);
-    } catch { } {
+    } catch {}
+    {
       // fall back per-category: use around bbox if city lookup fails for this category
       try {
         const fallback = await fetchPOIsAround(center, [cat], 3000, limitPerCat, signal, stats);
@@ -278,19 +312,28 @@ out center ${limitPerCat};`;
   return all.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
 }
 
-export type TransitStop = { id: string; name: string; lat: number; lon: number; mode: "bus" | "metro" };
+export type TransitStop = {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  mode: "bus" | "metro";
+};
 
 export async function fetchTransitStopsAround(
   center: { lat: number; lon: number },
   radiusMeters = 2000,
   limitPerMode = 20,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<TransitStop[]> {
   const bb = bboxFromCenter(center.lat, center.lon, radiusMeters);
   const bbox = `${bb.s},${bb.w},${bb.n},${bb.e}`;
   const queries = [
     { mode: "bus" as const, q: `nwr[highway="bus_stop"](${bbox});` },
-    { mode: "metro" as const, q: `nwr[railway="station"][station="subway"](${bbox});nwr[railway="subway_entrance"](${bbox});` },
+    {
+      mode: "metro" as const,
+      q: `nwr[railway="station"][station="subway"](${bbox});nwr[railway="subway_entrance"](${bbox});`,
+    },
   ];
   const out: TransitStop[] = [];
   for (const { mode, q } of queries) {
@@ -302,7 +345,8 @@ export async function fetchTransitStopsAround(
         const lat = el.type === "node" ? el.lat : el.center?.lat;
         const lon = el.type === "node" ? el.lon : el.center?.lon;
         if (lat == null || lon == null) continue;
-        const name = el.tags?.name || el.tags?.["name:ro"] || (mode === "bus" ? "Stație bus" : "Metrou");
+        const name =
+          el.tags?.name || el.tags?.["name:ro"] || (mode === "bus" ? "Stație bus" : "Metrou");
         out.push({ id: String(el.id), name, lat, lon, mode });
       }
     } catch {}
@@ -316,7 +360,7 @@ export async function fetchTransitStopsAround(
 export async function fetchTransitShapesFromStop(
   stopId: string,
   kind: "bus" | "metro",
-  dest: { lat: number; lon: number }
+  dest: { lat: number; lon: number },
 ): Promise<{
   shapes: { lat: number; lon: number }[][];
   alightStop?: { id: string; lat: number; lon: number; name?: string };
@@ -373,8 +417,8 @@ export async function fetchTransitShapesFromStop(
     try {
       const stopFilter =
         kind === "bus"
-          ? "[highway=\"bus_stop\"]"
-          : "[railway=\"subway_entrance\"]|[station=\"subway\"]|[public_transport=\"stop_position\"]|[public_transport=\"platform\"]";
+          ? '[highway="bus_stop"]'
+          : '[railway="subway_entrance"]|[station="subway"]|[public_transport="stop_position"]|[public_transport="platform"]';
       const qStops = `[out:json][timeout:25];rel(${best})->.r;node(r.r)${stopFilter};out body;`;
       const jS = await callOverpass(qStops);
       const nodes = (jS?.elements || []).filter((e: any) => e.type === "node");
@@ -382,14 +426,20 @@ export async function fetchTransitShapesFromStop(
         let bestNode: any = null;
         let bd = Infinity;
         for (const n of nodes) {
-          if (n.lat == null || n.lon == null) continue
+          if (n.lat == null || n.lon == null) continue;
           const d = hav(dest, { lat: n.lat, lon: n.lon });
           if (d < bd) {
             bd = d;
             bestNode = n;
           }
         }
-        if (bestNode) alightStop = { id: String(bestNode.id), lat: bestNode.lat, lon: bestNode.lon, name: bestNode.tags?.name };
+        if (bestNode)
+          alightStop = {
+            id: String(bestNode.id),
+            lat: bestNode.lat,
+            lon: bestNode.lon,
+            name: bestNode.tags?.name,
+          };
       }
     } catch {}
 
