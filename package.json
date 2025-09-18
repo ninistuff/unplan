@@ -20,7 +20,7 @@
     "doctor": "npx expo-doctor",
     "start:clean": "expo start -c",
     "check:babel": "node scripts/check-babel.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "npx tsc --noEmit",
     "test": "echo No tests yet && exit 0",
     "reset": "expo start -c",
     "clean": "rimraf node_modules package-lock.json",
