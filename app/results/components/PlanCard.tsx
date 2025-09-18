@@ -54,6 +54,8 @@ export function PlanCard({
   onToggleFavorite,
   onShare,
 }: PlanCardProps) {
+  // Track re-renders for performance debugging
+  console.count(`PlanCard render ${plan.id ?? index}`);
   const theme = getPlanTheme(String(plan.id) || String.fromCharCode(65 + (index % 3)), lang);
 
   const handleShare = () => {
@@ -69,7 +71,7 @@ export function PlanCard({
   // Extract transit info
   const stepsAny = (plan.steps || []) as any[];
   const transitStep = stepsAny.find(
-    (s: any) => s.kind === "transit" && s.transitAction === "board"
+    (s: any) => s.kind === "transit" && s.transitAction === "board",
   );
 
   return (
@@ -90,28 +92,17 @@ export function PlanCard({
           <Text style={{ fontSize: 20 }}>{theme.emoji}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: "#0f172a", fontSize: 19, fontWeight: "700" }}>
-            {theme.title}
-          </Text>
+          <Text style={{ color: "#0f172a", fontSize: 19, fontWeight: "700" }}>{theme.title}</Text>
           <Text style={{ opacity: 0.7 }}>
             {plan.mode} · {plan.min} min · {plan.km} km
           </Text>
-          <Text style={{ color: "#64748b", fontSize: 13, marginTop: 2 }}>
-            {theme.description}
-          </Text>
+          <Text style={{ color: "#64748b", fontSize: 13, marginTop: 2 }}>{theme.description}</Text>
         </View>
-        <Text style={{ fontSize: 18, marginLeft: 8 }}>
-          {getTransportIcon(plan.mode || "foot")}
-        </Text>
+        <Text style={{ fontSize: 18, marginLeft: 8 }}>{getTransportIcon(plan.mode || "foot")}</Text>
       </View>
 
       {/* Transit Info */}
-      {transitStep && (
-        <TransitBadge
-          transitType={transitStep.transit}
-          name={transitStep.name}
-        />
-      )}
+      {transitStep && <TransitBadge transitType={transitStep.transit} name={transitStep.name} />}
 
       {/* Stops Preview */}
       <Text
@@ -204,3 +195,5 @@ export function PlanCard({
     </Card>
   );
 }
+
+export default React.memo(PlanCard);

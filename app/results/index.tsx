@@ -239,6 +239,10 @@ export default function ResultsScreen() {
   const [toastMessage, setToastMessage] = useState<string>("");
   const [toastVisible, setToastVisible] = useState(false);
 
+  // Performance timing
+  const [generationTimeMs, setGenerationTimeMs] = useState<number | null>(null);
+  const isDebugMode = process.env.EXPO_PUBLIC_DEBUG === "true" || debugVisible;
+
   const options: GenerateOptions = useMemo(() => {
     // Normalize runtime params to GenerateOptions
     return {
@@ -312,61 +316,21 @@ export default function ResultsScreen() {
 
   // Stable key extractor for FlatList
   const keyExtractor = useCallback((item: any, index: number) => {
-    return String(item.id ?? index);
+    return item.id ?? item.title ?? String(index);
   }, []);
 
-  // Header component for FlatList
-  const ListHeaderComponent = useCallback(
-    () => (
-      <>
-        <FallbackBanner />
-        <DebugPanel />
-
-        <Pressable onLongPress={() => setDebugVisible(!debugVisible)}>
-          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16 }}>
-            {t(lang, "plansFor")}
-            {formatHM(options.duration)}
-          </Text>
-        </Pressable>
-
-        {/* Timeout Banner */}
-        {timeoutBanner && (
-          <View
-            style={{
-              backgroundColor: "#fecaca",
-              borderColor: "#fecaca",
-              borderWidth: 1,
-              padding: 10,
-              borderRadius: 8,
-              marginBottom: 16,
-            }}
-          >
-            <Text style={{ color: "#7f1d1d", fontSize: 12, marginBottom: 6 }}>
-              {lang === "ro"
-                ? "Rețea lentă — am folosit un fallback local."
-                : "Slow network — used local fallback."}
-            </Text>
-            <Pressable
-              onPress={load}
-              style={{
-                alignSelf: "flex-start",
-                backgroundColor: "#991b1b",
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 6,
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>
-                {t(lang, "retry")}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-      </>
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [debugVisible, lang, options.duration, timeoutBanner, load],
+  // Fixed item height for getItemLayout optimization
+  const ITEM_HEIGHT = 180;
+  const getItemLayout = useCallback(
+    (_data: any, index: number) => ({
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
+      index,
+    }),
+    [],
   );
+
+  // Header component for FlatList
 
   // Cleanup function for AbortController and timeouts
   useEffect(() => {
@@ -384,6 +348,9 @@ export default function ResultsScreen() {
     cancelledRef.current = false;
     setLoading(true);
     setError(null);
+
+    // Performance timing start
+    const t0 = globalThis.performance.now();
     setGenerationProgress(0);
 
     // watchdog abort
@@ -454,6 +421,12 @@ export default function ResultsScreen() {
       setPlans(arr);
       console.log("[results] sample plan", arr?.[0]);
 
+      // Performance timing end
+      const t1 = globalThis.performance.now();
+      const generationMs = Math.round(t1 - t0);
+      setGenerationTimeMs(generationMs);
+      console.log("[results] generatePlans ms =", generationMs);
+
       // Move progress to 85% only after generation step completes or aborts
       setGenerationProgress(85);
       if (cancelledRef.current) return;
@@ -494,6 +467,67 @@ export default function ResultsScreen() {
       inFlight.current = false;
     }
   }, [options, normalizedLink, lang, user?.profile?.language]);
+
+  // Header component for FlatList
+  const ListHeaderComponent = useCallback(
+    () => (
+      <>
+        <FallbackBanner />
+        <DebugPanel />
+
+        <Pressable onLongPress={() => setDebugVisible(!debugVisible)}>
+          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 16 }}>
+            {t(lang, "plansFor")}
+            {formatHM(options.duration)}
+          </Text>
+        </Pressable>
+
+        {/* Debug timing display */}
+        {isDebugMode && generationTimeMs !== null && (
+          <Text style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+            Generation time: {generationTimeMs}ms
+          </Text>
+        )}
+
+        {/* Timeout Banner */}
+        {timeoutBanner && (
+          <View
+            style={{
+              backgroundColor: "#fecaca",
+              borderColor: "#fecaca",
+              borderWidth: 1,
+              padding: 10,
+              borderRadius: 8,
+              marginBottom: 16,
+            }}
+          >
+            <Text style={{ color: "#7f1d1d", fontSize: 12, marginBottom: 6 }}>
+              {lang === "ro"
+                ? "Rețea lentă — am folosit un fallback local."
+                : "Slow network — used local fallback."}
+            </Text>
+            <Pressable
+              onPress={load}
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor: "#991b1b",
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 6,
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>
+                {t(lang, "retry")}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </>
+    ),
+    // DebugPanel and FallbackBanner are stable components defined in this file
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [debugVisible, lang, options.duration, timeoutBanner, load, isDebugMode, generationTimeMs],
+  );
 
   // Debounced load function for filter changes (available for future use)
   // const debouncedLoad = useCallback(() => {
@@ -807,7 +841,7 @@ export default function ResultsScreen() {
         windowSize={FLATLIST_CONFIG.WINDOW_SIZE}
         maxToRenderPerBatch={FLATLIST_CONFIG.MAX_TO_RENDER_PER_BATCH}
         removeClippedSubviews={FLATLIST_CONFIG.REMOVE_CLIPPED_SUBVIEWS}
-        getItemLayout={undefined} // Let FlatList calculate automatically
+        getItemLayout={getItemLayout}
       />
 
       {/* Simple Toast */}

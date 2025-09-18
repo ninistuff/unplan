@@ -103,25 +103,19 @@ export function MetaInfoRow({ timeText, distanceText, costText, lang }: MetaInfo
         <Text style={{ fontSize: 12, color: "#6c757d", marginBottom: 2 }}>
           {lang === "ro" ? "Timp" : "Time"}
         </Text>
-        <Text style={{ fontSize: 16, fontWeight: "600", color: "#212529" }}>
-          ⏱️ {timeText}
-        </Text>
+        <Text style={{ fontSize: 16, fontWeight: "600", color: "#212529" }}>⏱️ {timeText}</Text>
       </View>
       <View style={{ alignItems: "center", flex: 1 }}>
         <Text style={{ fontSize: 12, color: "#6c757d", marginBottom: 2 }}>
           {lang === "ro" ? "Distanță" : "Distance"}
         </Text>
-        <Text style={{ fontSize: 16, fontWeight: "600", color: "#212529" }}>
-          📍 {distanceText}
-        </Text>
+        <Text style={{ fontSize: 16, fontWeight: "600", color: "#212529" }}>📍 {distanceText}</Text>
       </View>
       <View style={{ alignItems: "center", flex: 1 }}>
         <Text style={{ fontSize: 12, color: "#6c757d", marginBottom: 2 }}>
           {lang === "ro" ? "Cost" : "Cost"}
         </Text>
-        <Text style={{ fontSize: 16, fontWeight: "600", color: "#212529" }}>
-          💰 {costText}
-        </Text>
+        <Text style={{ fontSize: 16, fontWeight: "600", color: "#212529" }}>💰 {costText}</Text>
       </View>
     </View>
   );
@@ -144,3 +138,6 @@ export function TransitBadge({ transitType, name }: TransitBadgeProps) {
     />
   );
 }
+
+// Memoized version for performance
+export const MemoizedPOIBadge = React.memo(POIBadge);
