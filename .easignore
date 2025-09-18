@@ -1,0 +1,14 @@
+node_modules
+android
+ios
+.expo
+.expo-shared
+dist
+build
+.git
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+.env
+.env.*
