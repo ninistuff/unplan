@@ -12,4 +12,4 @@ jobs:
           node-version: 22.x
           cache: npm
       - run: npm ci
-      - run: npx prettier --check ".github/**/*.{yml,yaml,md}" "docs/**/*.{md,yml,yaml}" "app/**/*.tsx"
+      - run: npx prettier --check ".github/**/*.{yml,yaml,md}" "docs/**/*.{md,yml,yaml}" "app/**/*.tsx" "**/*.json"
