@@ -4,11 +4,50 @@ import type { GenerateOptions, LatLng, Plan, POI } from "../lib/planTypes";
 import { globalDistanceCache } from "../lib/distance";
 import { fetchPOIsAround, fetchPOIsInCity, type OverpassCategory } from "./overpass";
 import { getSearchRadiusKm } from "./planRadius";
+import {
+  scorePOI,
+  createTieBreaker,
+  type ScoringContext,
+  type WeatherConditions,
+} from "../lib/scoring";
+import { TOP_N_POI, TOP_N_MATRIX, SCORING_WEIGHTS, WEATHER_THRESHOLDS } from "../lib/constants";
 
 // Haversine cu cache (m) - folosește cache-ul global pentru performanță
 function hav(a: LatLng, b: LatLng) {
   // Folosește cache-ul global și convertește din km la metri
   return globalDistanceCache.calculateDistance(a.lat, a.lon, b.lat, b.lon) * 1000;
+}
+
+// Create weather conditions from weather data
+function createWeatherConditions(weather: any): WeatherConditions {
+  const currentHour = weather?.hourly?.[0];
+  const feelsLike = currentHour?.apparent_temperature || currentHour?.temperature_2m || 20;
+  const precipitation = currentHour?.precipitation_probability || 0;
+  const windSpeed = currentHour?.wind_speed_10m || 0;
+
+  return {
+    isRaining: precipitation >= WEATHER_THRESHOLDS.RAIN_PROBABILITY_THRESHOLD,
+    isHot: feelsLike >= WEATHER_THRESHOLDS.HOT_FEELS_LIKE_CELSIUS,
+    isWindy: windSpeed >= WEATHER_THRESHOLDS.WIND_SPEED_THRESHOLD_KMH,
+  };
+}
+
+// Create scoring context from options and weather
+function createScoringContext(
+  options: GenerateOptions,
+  weather: any,
+  maxDistance: number,
+): ScoringContext {
+  const now = new Date();
+  const timeOfDay = now.getHours();
+
+  return {
+    userPrefs: options.userPrefs,
+    withWho: options.withWho,
+    weather: createWeatherConditions(weather),
+    timeOfDay,
+    maxDistance,
+  };
 }
 
 // Estimare timpi deplasare per mod (minute pentru distanța m)
@@ -238,6 +277,62 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     if (attempt === 1) requireOpen = false;
   }
 
+  // Apply scoring and TOP_N filtering for performance
+  const transportType =
+    opts.transport === "walk"
+      ? "walk"
+      : opts.transport === "bike"
+        ? "bike"
+        : opts.transport === "public"
+          ? "public"
+          : opts.transport === "car"
+            ? "car"
+            : "walk";
+  const maxDistance = getSearchRadiusKm(opts.duration, transportType);
+  const scoringContext = createScoringContext(opts, wx, maxDistance);
+
+  // Score all POIs and select top candidates
+  const scoredPois = selectedPois
+    .map((poi) => {
+      const distanceKm = globalDistanceCache.calculateDistance(
+        center.lat,
+        center.lon,
+        poi.lat,
+        poi.lon,
+      );
+      const score = scorePOI(poi, distanceKm, scoringContext, SCORING_WEIGHTS);
+      return { poi, score, distanceKm };
+    })
+    .sort((a, b) => {
+      // Sort by score descending, then by stable tie-breaker
+      if (Math.abs(a.score - b.score) < 0.001) {
+        return createTieBreaker(a.poi).localeCompare(createTieBreaker(b.poi));
+      }
+      return b.score - a.score;
+    });
+
+  // Keep top N POIs for matrix calculations
+  const topPois = scoredPois.slice(0, TOP_N_POI);
+  selectedPois = topPois.map((item) => item.poi);
+
+  // Debug logging when enabled
+  if (process.env.EXPO_PUBLIC_DEBUG === "true") {
+    const top5 = scoredPois.slice(0, 5);
+    console.log(
+      "[Generator] Top 5 POI scores:",
+      top5.map((item) => ({
+        name: item.poi.name,
+        category: item.poi.category,
+        score: item.score.toFixed(3),
+        distance: `${item.distanceKm.toFixed(1)}km`,
+      })),
+    );
+
+    // Log cache hit rate
+    const cacheStats = globalDistanceCache.getStats();
+    console.log("[Generator] Distance cache stats:", cacheStats);
+  }
+
   // Logging cerut: 3 numere + 3 POI din zonă
   try {
     const nearest = selectedPois
@@ -245,7 +340,13 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
       .sort((a, b) => a.d - b.d)
       .slice(0, 3)
       .map((x) => x.p.name);
-    console.log("[Generator] Overpass stats", { center, ...statsSummary });
+    console.log("[Generator] Overpass stats", {
+      center,
+      ...statsSummary,
+      initialPois: statsSummary.afterWho,
+      afterScoring: selectedPois.length,
+      topNMatrix: Math.min(selectedPois.length, TOP_N_MATRIX),
+    });
     console.log("[Generator] Sample POIs:", nearest);
     console.log("[Generator] Selected POIs count:", selectedPois.length);
   } catch {}
@@ -293,18 +394,36 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
       `[Itinerary] Building for ${opts.duration}min, transport: ${transport}, maxTravel: ${maxTravelMin}min`,
     );
 
-    // alege un POI de start (prima oprire) cât mai aproape de anchor
-    const byDist = selectedPois
-      .map((p) => ({ p, d: hav(anchor, { lat: p.lat, lon: p.lon }) }))
-      .sort((a, b) => a.d - b.d)
+    // Use top N POIs for distance matrix calculations (performance optimization)
+    const matrixPois = selectedPois.slice(0, TOP_N_MATRIX);
+
+    // Score POIs relative to anchor for itinerary building
+    const byScore = matrixPois
+      .map((p) => {
+        const distanceKm = globalDistanceCache.calculateDistance(
+          anchor.lat,
+          anchor.lon,
+          p.lat,
+          p.lon,
+        );
+        const score = scorePOI(p, distanceKm, scoringContext, SCORING_WEIGHTS);
+        return { p, score, d: hav(anchor, { lat: p.lat, lon: p.lon }) };
+      })
+      .sort((a, b) => {
+        // Sort by score descending, then by distance ascending for tie-breaking
+        if (Math.abs(a.score - b.score) < 0.001) {
+          return a.d - b.d;
+        }
+        return b.score - a.score;
+      })
       .map((x) => x.p);
 
     console.log(
-      `[Itinerary] Available POIs: ${byDist.length}, categories wanted: ${cats.join(",")}`,
+      `[Itinerary] Available POIs: ${byScore.length}, categories wanted: ${cats.join(",")}`,
     );
 
     for (const cat of cats) {
-      const candidate = byDist.find((p) => p.category === (cat as any) && !usedIds.has(p.id));
+      const candidate = byScore.find((p) => p.category === (cat as any) && !usedIds.has(p.id));
       if (!candidate) {
         console.log(`[Itinerary] ❌ No candidate for category: ${cat}`);
         continue;
