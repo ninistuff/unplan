@@ -73,9 +73,9 @@ export function scorePOI(
  * Get score based on POI open status
  */
 function getOpenStatusScore(poi: POI): number {
-  if (!poi.opening_hours) return 0.5; // Unknown status
+  if (!poi.openStatus) return 0.5; // Unknown status
 
-  switch (poi.opening_hours.status) {
+  switch (poi.openStatus) {
     case "open":
       return 1.0;
     case "closed":
@@ -114,11 +114,11 @@ function getCategoryMatchScore(poi: POI, context: ScoringContext): number {
       }
       break;
     case "pet":
-      // Only boost if explicitly pet-friendly
-      if (poi.tags?.["dog"] === "yes" || poi.tags?.["pets"] === "yes") {
+      // For pet activities, prefer outdoor spaces and pet-friendly categories
+      if (["park", "attraction"].includes(category)) {
         score += 0.3;
       } else {
-        score -= 0.2; // Slight penalty if not explicitly pet-friendly
+        score -= 0.1; // Slight penalty for indoor venues
       }
       break;
   }
@@ -127,17 +127,14 @@ function getCategoryMatchScore(poi: POI, context: ScoringContext): number {
   if (userPrefs?.activity) {
     switch (userPrefs.activity) {
       case "active":
-        if (["sports_centre", "fitness_centre", "climbing", "swimming_pool"].includes(category)) {
+        if (
+          ["sports_centre", "fitness_centre", "climbing_indoor", "swimming_pool"].includes(category)
+        ) {
           score += 0.3;
         }
         break;
-      case "cultural":
-        if (["museum", "gallery", "library", "theatre"].includes(category)) {
-          score += 0.3;
-        }
-        break;
-      case "social":
-        if (["cafe", "restaurant", "bar", "pub"].includes(category)) {
+      case "relaxed":
+        if (["cafe", "museum", "gallery", "library", "spa"].includes(category)) {
           score += 0.3;
         }
         break;
@@ -182,8 +179,8 @@ function getWeatherSuitabilityScore(poi: POI, weather: WeatherConditions): numbe
 
   // Wind considerations
   if (weather.isWindy) {
-    if (category === "cycling" || poi.tags?.["sport"] === "cycling") {
-      score -= 0.3; // Penalize cycling in wind
+    if (["park", "attraction"].includes(category)) {
+      score -= 0.2; // Slight penalty for outdoor activities in strong wind
     }
   }
 
@@ -214,8 +211,8 @@ function getTimeOfDayScore(poi: POI, timeOfDay: number): number {
     }
   } else {
     // Late night/early morning (0-7)
-    // Most things get penalty except 24h places
-    if (!poi.tags?.["opening_hours"]?.includes("24/7")) {
+    // Most things get penalty except bars/pubs that might be open late
+    if (!["bar", "pub"].includes(category)) {
       score -= 0.4;
     }
   }
@@ -227,21 +224,24 @@ function getTimeOfDayScore(poi: POI, timeOfDay: number): number {
  * Get score based on accessibility requirements
  */
 function getAccessibilityScore(poi: POI, context: ScoringContext): number {
-  const { userPrefs, withWho } = context;
+  const { userPrefs } = context;
+  const category = poi.category;
   let score = 0.5; // Default neutral
 
   // Check for disability accessibility
   const hasDisabilities =
-    userPrefs?.disabilities?.mobility ||
-    userPrefs?.disabilities?.visual ||
-    userPrefs?.disabilities?.hearing ||
-    (withWho === "family" && context.userPrefs?.disabilities);
+    userPrefs?.disabilities?.wheelchair ||
+    userPrefs?.disabilities?.reducedMobility ||
+    userPrefs?.disabilities?.lowVision ||
+    userPrefs?.disabilities?.hearingImpairment ||
+    userPrefs?.disabilities?.strollerFriendly;
 
   if (hasDisabilities) {
-    if (poi.tags?.["wheelchair"] === "yes") {
-      score += 0.3;
-    } else if (poi.tags?.["wheelchair"] === "no") {
-      score -= 0.4;
+    // Simplified accessibility scoring - prefer certain categories that are typically more accessible
+    if (["museum", "gallery", "library", "cinema"].includes(category)) {
+      score += 0.2; // These venues typically have better accessibility
+    } else if (["climbing_indoor", "escape_game"].includes(category)) {
+      score -= 0.3; // These might be less accessible
     }
   }
 

@@ -278,8 +278,18 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
   }
 
   // Apply scoring and TOP_N filtering for performance
-  const maxDistance = getSearchRadiusKm(opts.transport, opts.duration);
-  const scoringContext = createScoringContext(opts, weather, maxDistance);
+  const transportType =
+    opts.transport === "walk"
+      ? "walk"
+      : opts.transport === "bike"
+        ? "bike"
+        : opts.transport === "public"
+          ? "public"
+          : opts.transport === "car"
+            ? "car"
+            : "walk";
+  const maxDistance = getSearchRadiusKm(opts.duration, transportType);
+  const scoringContext = createScoringContext(opts, wx, maxDistance);
 
   // Score all POIs and select top candidates
   const scoredPois = selectedPois
