@@ -97,7 +97,17 @@ function nameValid(name: any): boolean {
   const n = name.trim();
   if (n.length < POI_FILTER_CONFIG.REQUIRED_NAME_MIN_LENGTH) return false;
   if (/^unnamed/i.test(n)) return false;
-  return true;
+
+  // Additional protections against generic or invalid names
+  const genericPatterns = [
+    /^(no name|noname|n\/a|na|null|undefined)$/i,
+    /^(fixme|todo|temp|temporary)$/i,
+    /^(test|testing|example)$/i,
+    /^\d+$/, // Only numbers
+    /^[^\w\s]+$/, // Only special characters
+  ];
+
+  return !genericPatterns.some((pattern) => pattern.test(n));
 }
 
 function isExcludedGeneric(tags: any): boolean {
@@ -165,7 +175,11 @@ function parseElements(elements: any[]): POI[] {
     .map((el) => {
       const lat = el.type === "node" ? el.lat : el.center?.lat;
       const lon = el.type === "node" ? el.lon : el.center?.lon;
+
+      // Enhanced coordinate validation
       if (lat == null || lon == null) return null;
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+      if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
 
       const tags = el.tags || {};
       const name = tags.name || tags["name:ro"];

@@ -91,6 +91,8 @@ export function useDistanceCache() {
  */
 class DistanceCache {
   private cache = new Map<string, number>();
+  private hits = 0;
+  private misses = 0;
 
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const cacheKey = createCacheKey(lat1, lon1, lat2, lon2);
@@ -98,10 +100,12 @@ class DistanceCache {
     // Check cache first
     const cached = this.cache.get(cacheKey);
     if (cached !== undefined) {
+      this.hits++;
       return cached;
     }
 
     // Calculate and cache the result
+    this.misses++;
     const distance = haversineKm(lat1, lon1, lat2, lon2);
     this.cache.set(cacheKey, distance);
 
@@ -118,10 +122,22 @@ class DistanceCache {
 
   clearCache(): void {
     this.cache.clear();
+    this.hits = 0;
+    this.misses = 0;
   }
 
   getCacheSize(): number {
     return this.cache.size;
+  }
+
+  getStats(): { hits: number; misses: number; hitRate: number; cacheSize: number } {
+    const total = this.hits + this.misses;
+    return {
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: total > 0 ? this.hits / total : 0,
+      cacheSize: this.cache.size,
+    };
   }
 }
 

@@ -54,8 +54,10 @@ export function PlanCard({
   onToggleFavorite,
   onShare,
 }: PlanCardProps) {
-  // Track re-renders for performance debugging
-  console.count(`PlanCard render ${plan.id ?? index}`);
+  // Track re-renders for performance debugging (only in debug mode)
+  if (process.env.EXPO_PUBLIC_DEBUG === "true") {
+    console.count(`PlanCard render ${plan.id ?? index}`);
+  }
   const theme = getPlanTheme(String(plan.id) || String.fromCharCode(65 + (index % 3)), lang);
 
   const handleShare = () => {

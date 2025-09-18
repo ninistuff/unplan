@@ -314,9 +314,18 @@ export default function ResultsScreen() {
     [favs.keys, favs.toggle, lang, units],
   );
 
-  // Stable key extractor for FlatList
+  // Stable key extractor for FlatList using hash from name and coordinates
   const keyExtractor = useCallback((item: any, index: number) => {
-    return item.id ?? item.title ?? String(index);
+    if (item.id) return String(item.id);
+    if (item.title) return item.title;
+
+    // Create stable hash from plan content for consistent keys
+    const firstStep = item.steps?.[0];
+    if (firstStep?.name && firstStep?.lat && firstStep?.lon) {
+      return `${firstStep.name}_${firstStep.lat.toFixed(6)}_${firstStep.lon.toFixed(6)}`;
+    }
+
+    return String(index);
   }, []);
 
   // Fixed item height for getItemLayout optimization
