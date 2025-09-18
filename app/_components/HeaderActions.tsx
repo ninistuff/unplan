@@ -10,14 +10,27 @@ export default function HeaderActions() {
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
       <Link href="/favorites" asChild>
-        <Pressable hitSlop={10} style={{ marginRight: 8 }} accessibilityRole="button" accessibilityLabel="Favorites">
+        <Pressable
+          hitSlop={10}
+          style={{ marginRight: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Favorites"
+        >
           <Ionicons name={"heart" as any} size={22} color="#ef4444" />
         </Pressable>
       </Link>
       <Link href="/profile" asChild>
-        <Pressable hitSlop={10} style={{ marginRight: 8 }} accessibilityRole="button" accessibilityLabel="Profile">
+        <Pressable
+          hitSlop={10}
+          style={{ marginRight: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Profile"
+        >
           {avatar ? (
-            <Image source={{ uri: avatar }} style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#e5e7eb' }} />
+            <Image
+              source={{ uri: avatar }}
+              style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#e5e7eb" }}
+            />
           ) : (
             <Ionicons
               name={Platform.select({ ios: "person.circle", android: "person" }) as any}
@@ -30,4 +43,3 @@ export default function HeaderActions() {
     </View>
   );
 }
-

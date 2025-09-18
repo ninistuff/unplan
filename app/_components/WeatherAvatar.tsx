@@ -39,8 +39,5 @@ export default function WeatherAvatar({ condition = "sunny", tempC, size = 56 }:
     );
   }
 
-  return (
-    <LottieView source={source} autoPlay loop style={{ width: size, height: size }} />
-  );
+  return <LottieView source={source} autoPlay loop style={{ width: size, height: size }} />;
 }
-

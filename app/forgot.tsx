@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { useAuth } from "../lib/auth";
@@ -9,14 +18,19 @@ import { color, radii, spacing, cardStyle, shadows } from "../constants/theme";
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const lang = (user?.profile?.language ?? 'en') as 'en' | 'ro';
+  const lang = (user?.profile?.language ?? "en") as "en" | "ro";
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const onSubmit = async () => {
     if (!email.trim()) {
-      Alert.alert(lang==='ro' ? 'Introdu emailul' : 'Enter email', lang==='ro' ? 'Te rugăm să introduci emailul contului.' : 'Please enter your account email.');
+      Alert.alert(
+        lang === "ro" ? "Introdu emailul" : "Enter email",
+        lang === "ro"
+          ? "Te rugăm să introduci emailul contului."
+          : "Please enter your account email.",
+      );
       return;
     }
     try {
@@ -29,23 +43,43 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: color.appBg }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ flex: 1, backgroundColor: color.appBg }}
+    >
       <View style={{ flex: 1, backgroundColor: color.appBg }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: "center", gap: spacing.lg, padding: spacing.xl, paddingBottom: (insets.bottom || 0) + spacing.xl }}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: spacing.lg,
+            padding: spacing.xl,
+            paddingBottom: (insets.bottom || 0) + spacing.xl,
+          }}
+        >
           <View style={{ width: "100%", maxWidth: 460 }}>
-            <Text style={{ fontSize: 28, fontWeight: "800", textAlign: "center", color: color.text }}>{t(lang,'forgotTitle')}</Text>
+            <Text
+              style={{ fontSize: 28, fontWeight: "800", textAlign: "center", color: color.text }}
+            >
+              {t(lang, "forgotTitle")}
+            </Text>
             <Text style={{ textAlign: "center", color: color.textMuted, marginTop: spacing.sm }}>
-              {lang==='ro' ? 'Introdu emailul și îți trimitem instrucțiuni.' : 'Enter your email and we’ll send reset instructions.'}
+              {lang === "ro"
+                ? "Introdu emailul și îți trimitem instrucțiuni."
+                : "Enter your email and we’ll send reset instructions."}
             </Text>
             {sent ? (
               <Text style={{ color: "#16a34a", textAlign: "center", marginTop: spacing.sm }}>
-                {t(lang,'sentIfExists')}
+                {t(lang, "sentIfExists")}
               </Text>
             ) : null}
-            <View style={{ ...cardStyle, ...shadows.md, padding: spacing.xl, marginTop: spacing.lg }}>
+            <View
+              style={{ ...cardStyle, ...shadows.md, padding: spacing.xl, marginTop: spacing.lg }}
+            >
               <View style={{ gap: spacing.md }}>
                 <LabeledInput
-                  label={t(lang,'email')}
+                  label={t(lang, "email")}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -55,14 +89,28 @@ export default function ForgotPasswordScreen() {
                 <Pressable
                   onPress={onSubmit}
                   disabled={loading}
-                  style={{ backgroundColor: loading ? "#9ca3af" : color.accent, paddingVertical: 14, borderRadius: radii.lg, alignItems: 'center' }}
+                  style={{
+                    backgroundColor: loading ? "#9ca3af" : color.accent,
+                    paddingVertical: 14,
+                    borderRadius: radii.lg,
+                    alignItems: "center",
+                  }}
                 >
-                  <Text style={{ color: "white", textAlign: "center", fontWeight: "800", fontSize: 16 }}>
-                    {loading ? (lang==='ro' ? 'Se trimite...' : 'Sending...') : t(lang,'sendReset')}
+                  <Text
+                    style={{ color: "white", textAlign: "center", fontWeight: "800", fontSize: 16 }}
+                  >
+                    {loading
+                      ? lang === "ro"
+                        ? "Se trimite..."
+                        : "Sending..."
+                      : t(lang, "sendReset")}
                   </Text>
                 </Pressable>
                 <Text style={{ textAlign: "center", color: color.text }}>
-                  {t(lang,'backToLogin')} <Link href="/login" style={{ color: color.accent, fontWeight: "700" }}>{t(lang,'login')}</Link>
+                  {t(lang, "backToLogin")}{" "}
+                  <Link href="/login" style={{ color: color.accent, fontWeight: "700" }}>
+                    {t(lang, "login")}
+                  </Link>
                 </Text>
               </View>
             </View>
@@ -92,4 +140,3 @@ function LabeledInput({ label, ...props }: any) {
     </View>
   );
 }
-
