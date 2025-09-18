@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, useRouter } from "expo-router";
 import { useAuth } from "../lib/auth";
@@ -10,7 +18,7 @@ export default function LoginScreen() {
   const { signIn, user } = useAuth() as any;
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const lang = (user?.profile?.language ?? 'en') as 'en' | 'ro';
+  const lang = (user?.profile?.language ?? "en") as "en" | "ro";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,18 +38,38 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: color.appBg }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ flex: 1, backgroundColor: color.appBg }}
+    >
       <View style={{ flex: 1, backgroundColor: color.appBg }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: "center", gap: spacing.lg, padding: spacing.xl, paddingBottom: (insets.bottom || 0) + spacing.xl }}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: spacing.lg,
+            padding: spacing.xl,
+            paddingBottom: (insets.bottom || 0) + spacing.xl,
+          }}
+        >
           <View style={{ width: "100%", maxWidth: 460 }}>
-            <Text style={{ fontSize: 28, fontWeight: "800", textAlign: "center", color: color.text }}>{t(lang,'enterDetails')}</Text>
+            <Text
+              style={{ fontSize: 28, fontWeight: "800", textAlign: "center", color: color.text }}
+            >
+              {t(lang, "enterDetails")}
+            </Text>
             {error ? (
-              <Text style={{ color: "#dc2626", textAlign: "center", marginTop: spacing.sm }}>{error}</Text>
+              <Text style={{ color: "#dc2626", textAlign: "center", marginTop: spacing.sm }}>
+                {error}
+              </Text>
             ) : null}
-            <View style={{ ...cardStyle, ...shadows.md, padding: spacing.xl, marginTop: spacing.lg }}>
+            <View
+              style={{ ...cardStyle, ...shadows.md, padding: spacing.xl, marginTop: spacing.lg }}
+            >
               <View style={{ gap: spacing.md }}>
                 <LabeledInput
-                  label={t(lang,'email')}
+                  label={t(lang, "email")}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -49,7 +77,7 @@ export default function LoginScreen() {
                   autoComplete="email"
                 />
                 <LabeledInput
-                  label={t(lang,'password')}
+                  label={t(lang, "password")}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -59,17 +87,29 @@ export default function LoginScreen() {
                 <Pressable
                   onPress={onSubmit}
                   disabled={loading}
-                style={{ backgroundColor: loading ? "#9ca3af" : color.accent, paddingVertical: 14, borderRadius: radii.lg, alignItems: 'center' }}
+                  style={{
+                    backgroundColor: loading ? "#9ca3af" : color.accent,
+                    paddingVertical: 14,
+                    borderRadius: radii.lg,
+                    alignItems: "center",
+                  }}
                 >
-                <Text style={{ color: "white", textAlign: "center", fontWeight: "800", fontSize: 16 }}>
-                  {loading ? t(lang,'signingIn') : t(lang,'signIn')}
-                </Text>
+                  <Text
+                    style={{ color: "white", textAlign: "center", fontWeight: "800", fontSize: 16 }}
+                  >
+                    {loading ? t(lang, "signingIn") : t(lang, "signIn")}
+                  </Text>
                 </Pressable>
-                <View style={{ alignItems: 'center', gap: 2 }}>
-                <Text style={{ textAlign: "center", color: color.text }}>
-                  {t(lang,'noAccount')} <Link href="/register" style={{ color: color.accent, fontWeight: "700" }}>{t(lang,'register')}</Link>
-                </Text>
-                <Link href="/forgot" style={{ color: color.accent, fontWeight: '700' }}>{t(lang,'forgot')}</Link>
+                <View style={{ alignItems: "center", gap: 2 }}>
+                  <Text style={{ textAlign: "center", color: color.text }}>
+                    {t(lang, "noAccount")}{" "}
+                    <Link href="/register" style={{ color: color.accent, fontWeight: "700" }}>
+                      {t(lang, "register")}
+                    </Link>
+                  </Text>
+                  <Link href="/forgot" style={{ color: color.accent, fontWeight: "700" }}>
+                    {t(lang, "forgot")}
+                  </Link>
                 </View>
               </View>
             </View>
