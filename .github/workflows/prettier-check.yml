@@ -1,0 +1,15 @@
+name: prettier-check
+on:
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --check ".github/**/*.{yml,yaml,md}" "docs/**/*.{md,yml,yaml}" "app/**/*.tsx"
