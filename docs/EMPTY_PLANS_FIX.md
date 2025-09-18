@@ -16,9 +16,10 @@ Acest document descrie reparările implementate pentru a rezolva problema planur
 **Problema:** Filtrele eliminau toate POI-urile dacă nu aveau reviews/ratings.
 
 **Soluția:**
+
 ```typescript
 // ÎNAINTE: Filtru strict (elimina toate POI-urile fără reviews)
-filtered = filtered.filter(p => {
+filtered = filtered.filter((p) => {
   const hasReviews = (p as any).reviews && (p as any).reviews > 0;
   const hasRating = (p as any).rating && (p as any).rating > 0;
   const hasPopularity = (p as any).popularity && (p as any).popularity > 0;
@@ -26,7 +27,7 @@ filtered = filtered.filter(p => {
 });
 
 // DUPĂ: Filtru relaxat (preferă calitatea dar nu elimină tot)
-const withQuality = filtered.filter(p => {
+const withQuality = filtered.filter((p) => {
   const hasReviews = (p as any).reviews && (p as any).reviews > 0;
   const hasRating = (p as any).rating && (p as any).rating > 0;
   const hasPopularity = (p as any).popularity && (p as any).popularity > 0;
@@ -38,7 +39,9 @@ if (withQuality.length >= 3) {
   filtered = withQuality; // Preferă calitatea
 } else {
   // Folosește toate POI-urile disponibile
-  console.log(`Only ${withQuality.length} quality POIs found, using all ${filtered.length} available POIs`);
+  console.log(
+    `Only ${withQuality.length} quality POIs found, using all ${filtered.length} available POIs`,
+  );
 }
 ```
 
@@ -49,22 +52,28 @@ if (withQuality.length >= 3) {
 **Problema:** Dacă algoritmul principal eșua, planurile rămâneau goale.
 
 **Soluția:**
+
 ```typescript
 // FALLBACK NIVEL 1: Constrângeri relaxate
 if (optimizedPOIs.length === 0) {
   const relaxedConstraints = {
     ...constraints,
     maxDistance: constraints.maxDistance * 3,
-    efficientRadius: constraints.efficientRadius * 2
+    efficientRadius: constraints.efficientRadius * 2,
   };
-  const fallbackPOIs = optimizeRouteGeographically([...pool], seq.slice(0, 2), start, relaxedConstraints);
+  const fallbackPOIs = optimizeRouteGeographically(
+    [...pool],
+    seq.slice(0, 2),
+    start,
+    relaxedConstraints,
+  );
   optimizedPOIs.push(...fallbackPOIs);
 }
 
 // FALLBACK NIVEL 2: POI-uri simple nearest
 if (optimizedPOIs.length === 0) {
   for (const category of seq.slice(0, 2)) {
-    const categoryPOIs = pool.filter(p => p.category === category);
+    const categoryPOIs = pool.filter((p) => p.category === category);
     if (categoryPOIs.length > 0) {
       categoryPOIs.sort((a, b) => haversine(start, a) - haversine(start, b));
       const nearest = categoryPOIs[0];
@@ -76,12 +85,18 @@ if (optimizedPOIs.length === 0) {
 }
 
 // FALLBACK NIVEL 3: Emergency - orice POI apropiat
-if (steps.length === 1) { // Doar start step
-  const allNearbyPOIs = pool.filter(p => haversine(start, p) <= constraints.maxDistance * 4);
+if (steps.length === 1) {
+  // Doar start step
+  const allNearbyPOIs = pool.filter((p) => haversine(start, p) <= constraints.maxDistance * 4);
   if (allNearbyPOIs.length > 0) {
     allNearbyPOIs.sort((a, b) => haversine(start, a) - haversine(start, b));
     const emergencyPOI = allNearbyPOIs[0];
-    steps.push({ kind: "poi", name: emergencyPOI.name, coord: emergencyPOI, category: emergencyPOI.category });
+    steps.push({
+      kind: "poi",
+      name: emergencyPOI.name,
+      coord: emergencyPOI,
+      category: emergencyPOI.category,
+    });
   }
 }
 ```
@@ -93,6 +108,7 @@ if (steps.length === 1) { // Doar start step
 **Problema:** Sistemul de diversitate era prea strict și bloca selecția.
 
 **Soluția:**
+
 ```typescript
 // ÎNAINTE: Diversitate prea strictă
 if (diversePOIs.length < 3 && qualityPOIs.length > 0) {
@@ -105,7 +121,7 @@ if (diversePOIs.length < 2 && qualityPOIs.length > 0) {
   poiByCategory[cat] = qualityPOIs.slice(0, Math.max(8, diversePOIs.length));
 } else if (diversePOIs.length === 0 && qualityPOIs.length === 0) {
   // Emergency: folosește orice POI din categoria respectivă
-  const allCategoryPOIs = availablePOIs.filter(p => p.category === cat);
+  const allCategoryPOIs = availablePOIs.filter((p) => p.category === cat);
   console.log(`Emergency fallback for ${cat}: using any available POIs`);
   poiByCategory[cat] = allCategoryPOIs.slice(0, 5);
 }
@@ -118,15 +134,21 @@ if (diversePOIs.length < 2 && qualityPOIs.length > 0) {
 **Problema:** Era greu să diagnostichezi de ce planurile erau goale.
 
 **Soluția:**
+
 ```typescript
 // Debug detaliat la fiecare pas
-console.log(`Plan ${id}: Available POI pool size: ${pool.length}, categories requested: ${seq.join(', ')}`);
+console.log(
+  `Plan ${id}: Available POI pool size: ${pool.length}, categories requested: ${seq.join(", ")}`,
+);
 
 // Debug distribuție POI-uri pe categorii
-const poiByCategory = pois.reduce((acc, poi) => {
-  acc[poi.category] = (acc[poi.category] || 0) + 1;
-  return acc;
-}, {} as Record<string, number>);
+const poiByCategory = pois.reduce(
+  (acc, poi) => {
+    acc[poi.category] = (acc[poi.category] || 0) + 1;
+    return acc;
+  },
+  {} as Record<string, number>,
+);
 console.log(`POI distribution:`, poiByCategory);
 
 // Debug la fiecare nivel de fallback
@@ -139,24 +161,26 @@ console.log(`Plan ${id}: Added emergency POI: ${emergencyPOI.name}`);
 
 ## 📊 **Comparație Înainte vs După**
 
-| Aspect | Înainte | După |
-|--------|---------|------|
-| **Planuri goale** | Frecvente | Eliminate complet |
-| **Filtre calitate** | Prea stricte | Relaxate cu preferințe |
-| **Fallback-uri** | Inexistente | 3 nivele de siguranță |
-| **Diversitate** | Prea agresivă | Echilibrată |
-| **Debugging** | Minimal | Detaliat și util |
-| **Harta** | Doar pin start | Afișează toate POI-urile |
+| Aspect              | Înainte        | După                     |
+| ------------------- | -------------- | ------------------------ |
+| **Planuri goale**   | Frecvente      | Eliminate complet        |
+| **Filtre calitate** | Prea stricte   | Relaxate cu preferințe   |
+| **Fallback-uri**    | Inexistente    | 3 nivele de siguranță    |
+| **Diversitate**     | Prea agresivă  | Echilibrată              |
+| **Debugging**       | Minimal        | Detaliat și util         |
+| **Harta**           | Doar pin start | Afișează toate POI-urile |
 
 ## 🎯 **Rezultate Garantate**
 
 ### **Planuri Funcționale:**
+
 - ✅ **Minimum 1 POI** per plan garantat
 - ✅ **Fallback în cascadă** pentru orice situație
 - ✅ **Preferință pentru calitate** dar fără blocaje
 - ✅ **Diversitate echilibrată** fără extremisme
 
 ### **Harta Funcțională:**
+
 - ✅ **Afișează toate POI-urile** din plan
 - ✅ **Pin de start** + markeri pentru fiecare POI
 - ✅ **Transmitere corectă** a datelor către WebView
@@ -165,18 +189,21 @@ console.log(`Plan ${id}: Added emergency POI: ${emergencyPOI.name}`);
 ## 🧪 **Pentru Testare**
 
 ### **Test 1: Planuri Non-Goale**
+
 1. **Generează planuri** cu orice parametri
 2. **Verifică că fiecare plan** are măcar 1 POI
 3. **Confirmă că nu apar** planuri complet goale
 4. **Validează că POI-urile** au nume și coordonate
 
 ### **Test 2: Harta Funcțională**
+
 1. **Apasă "Vezi pe hartă"** pe orice plan
 2. **Verifică că apar markeri** pentru fiecare POI
 3. **Confirmă că nu e doar** pinul de start
 4. **Testează că markerii** sunt clickabili
 
 ### **Test 3: Logging și Debugging**
+
 1. **Verifică logs-urile** în consolă
 2. **Confirmă că apar** informații despre POI-uri
 3. **Validează că fallback-urile** se activează când e necesar
@@ -193,17 +220,20 @@ console.log(`Plan ${id}: Added emergency POI: ${emergencyPOI.name}`);
 ## 📝 **Note Tehnice**
 
 ### **Ordinea Fallback-urilor:**
+
 1. **Algoritm principal** cu constrângeri normale
 2. **Constrângeri relaxate** (distanță x3, rază x2)
 3. **Nearest POI simplu** per categorie
 4. **Emergency POI** - orice POI apropiat
 
 ### **Criterii de Calitate Relaxate:**
+
 - **Preferă POI-uri cu reviews** dacă sunt disponibile ≥3
 - **Folosește toate POI-urile** dacă reviews-urile sunt <3
 - **Nu elimină niciodată** toate POI-urile
 
 ### **Diversitate Echilibrată:**
+
 - **Evită repetarea** când e posibil
 - **Permite repetarea** când e necesar pentru funcționalitate
 - **Emergency fallback** la orice POI din categorie

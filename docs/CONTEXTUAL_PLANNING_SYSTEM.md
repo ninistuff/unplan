@@ -7,6 +7,7 @@ Acest document descrie sistemul inteligent de planificare contextuală care gene
 ### 1. **Analiza Contextuală Completă**
 
 **Factori Analizați:**
+
 - ☀️ **Vreme**: Temperatură, condiții meteorologice (însorit, înnorat, ploios)
 - 🕐 **Timpul zilei**: Dimineață, după-amiază, seară, noapte
 - 📅 **Ziua săptămânii**: Săptămână vs weekend
@@ -19,16 +20,18 @@ Acest document descrie sistemul inteligent de planificare contextuală care gene
 ### 2. **Integrarea Meteo în Timp Real**
 
 **API Open-Meteo Integration:**
+
 ```typescript
 async function getCurrentWeather(location: LatLng): Promise<WeatherData | null> {
   const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current_weather=true`
+    `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current_weather=true`,
   );
   // Procesează codurile meteo și returnează condiții simplificate
 }
 ```
 
 **Condiții Meteo Procesate:**
+
 - **Sunny** (0): Vreme frumoasă
 - **Cloudy** (1,2,3): Înnorat
 - **Rainy** (51,53,55,56,57,61,63,65,66,67,80,81,82): Ploios
@@ -38,65 +41,71 @@ async function getCurrentWeather(location: LatLng): Promise<WeatherData | null> 
 ### 1. **Ajustări Bazate pe Vreme**
 
 **Vreme Ploioasă:**
+
 ```typescript
 if (condition === "rainy") {
-  weights.museum += 0.8;    // Favorizează muzee
-  weights.cinema += 0.7;    // Favorizează cinematografe
-  weights.cafe += 0.6;      // Favorizează cafenele
-  weights.park -= 0.9;      // Descurajează parcurile
-  weights.bar += 0.3;       // Socializare în interior
+  weights.museum += 0.8; // Favorizează muzee
+  weights.cinema += 0.7; // Favorizează cinematografe
+  weights.cafe += 0.6; // Favorizează cafenele
+  weights.park -= 0.9; // Descurajează parcurile
+  weights.bar += 0.3; // Socializare în interior
 }
 ```
 
 **Temperaturi Extreme:**
+
 ```typescript
 if (temperature < 5) {
   // Vreme foarte rece - spații calde
-  weights.cafe += 0.7;      // Cafenele calde
-  weights.museum += 0.5;    // Muzee încălzite
-  weights.park -= 0.8;      // Evită exteriorul
+  weights.cafe += 0.7; // Cafenele calde
+  weights.museum += 0.5; // Muzee încălzite
+  weights.park -= 0.8; // Evită exteriorul
 } else if (temperature > 25) {
   // Vreme caldă - umbră și aer condiționat
-  weights.park += 0.6;      // Parcuri cu umbră
-  weights.cafe += 0.4;      // Aer condiționat
-  weights.museum += 0.3;    // Interior răcoros
+  weights.park += 0.6; // Parcuri cu umbră
+  weights.cafe += 0.4; // Aer condiționat
+  weights.museum += 0.3; // Interior răcoros
 }
 ```
 
 ### 2. **Ajustări Bazate pe Timpul Zilei**
 
 **Dimineața (6-12):**
+
 ```typescript
-weights.cafe += 0.8;        // Cafea de dimineață
-weights.park += 0.6;        // Plimbări matinale
-weights.bar -= 0.9;         // Barurile sunt închise
+weights.cafe += 0.8; // Cafea de dimineață
+weights.park += 0.6; // Plimbări matinale
+weights.bar -= 0.9; // Barurile sunt închise
 ```
 
 **Seara (18-22):**
+
 ```typescript
-weights.bar += 0.8;         // Socializare de seară
-weights.cinema += 0.6;      // Filme de seară
-weights.museum -= 0.5;      // Multe muzee închise
+weights.bar += 0.8; // Socializare de seară
+weights.cinema += 0.6; // Filme de seară
+weights.museum -= 0.5; // Multe muzee închise
 ```
 
 ### 3. **Ajustări Bazate pe Companie**
 
 **Cu Animalul de Companie:**
+
 ```typescript
 if (opts.withWho === "pet") {
-  weights.park += 1.5;      // Parcuri pet-friendly
-  weights.cafe += 0.2;      // Unele cafenele permit animale
-  weights.museum -= 0.9;    // Muzeele nu permit animale
-  weights.cinema -= 0.9;    // Cinematografele nu permit animale
+  weights.park += 1.5; // Parcuri pet-friendly
+  weights.cafe += 0.2; // Unele cafenele permit animale
+  weights.museum -= 0.9; // Muzeele nu permit animale
+  weights.cinema -= 0.9; // Cinematografele nu permit animale
 }
 ```
 
 **Cu Familia și Copii:**
+
 ```typescript
 if (opts.withWho === "family" && childAge > 0) {
-  weights.park += 0.8;      // Activități pentru copii
-  weights.museum += 0.5;    // Educațional pentru copii
-  weights.bar -= 0.9;       // Neadecvat pentru copii
+  weights.park += 0.8; // Activități pentru copii
+  weights.museum += 0.5; // Educațional pentru copii
+  weights.bar -= 0.9; // Neadecvat pentru copii
 }
 ```
 
@@ -105,6 +114,7 @@ if (opts.withWho === "family" && childAge > 0) {
 ### 1. **Costuri Adaptive pe Context**
 
 **Ajustări de Preț Contextuale:**
+
 ```typescript
 if (context.weather?.condition === "rainy") {
   // Cerere mai mare pentru activități interioare
@@ -121,6 +131,7 @@ if (context.timeOfDay === "evening" || context.dayOfWeek === "weekend") {
 ```
 
 **Costuri de Bază:**
+
 - 🏞️ **Parc**: 0 lei (gratuit)
 - ☕ **Cafenea**: 15 lei
 - 🍺 **Bar**: 30 lei
@@ -130,6 +141,7 @@ if (context.timeOfDay === "evening" || context.dayOfWeek === "weekend") {
 ### 2. **Optimizarea Bugetului**
 
 **Înlocuirea Inteligentă:**
+
 ```typescript
 // Înlocuiește activitățile scumpe cu alternative mai ieftine
 if (total > budget) {
@@ -145,10 +157,10 @@ if (total > budget) {
 
 ```typescript
 function selectWeightedCategory(excludeCategories = []) {
-  const availableCategories = categories.filter(cat => !excludeCategories.includes(cat));
+  const availableCategories = categories.filter((cat) => !excludeCategories.includes(cat));
   const totalWeight = availableCategories.reduce((sum, cat) => sum + weights[cat], 0);
   let random = Math.random() * totalWeight;
-  
+
   for (const cat of availableCategories) {
     random -= weights[cat];
     if (random <= 0) return cat;
@@ -159,14 +171,17 @@ function selectWeightedCategory(excludeCategories = []) {
 ### 2. **Diversitate în Planuri**
 
 **Plan A - Conservator:**
+
 - Prima oprire: Categoria cu cea mai mare pondere
 - Strategia de distanță: "nearest" (cel mai aproape)
 
 **Plan B - Echilibrat:**
+
 - Prima oprire: A doua categorie ca pondere
 - Strategia de distanță: "middle" (distanță medie)
 
 **Plan C - Aventuros:**
+
 - Prima oprire: A treia categorie ca pondere
 - Strategia de distanță: "far" (mai departe)
 
@@ -175,12 +190,14 @@ function selectWeightedCategory(excludeCategories = []) {
 ### Exemplu 1: Duminică Dimineața, Însorit, 22°C, Cu Familia
 
 **Context Analizat:**
+
 - ☀️ Vreme perfectă (15-25°C)
 - 🌅 Dimineață (cafea + activități)
 - 📅 Weekend (mai mult timp liber)
 - 👨‍👩‍👧‍👦 Familie cu copii
 
 **Planuri Generate:**
+
 - **Plan A**: Parc → Cafenea → Muzeu
 - **Plan B**: Cafenea → Parc → Muzeu
 - **Plan C**: Muzeu → Parc → Cafenea
@@ -188,12 +205,14 @@ function selectWeightedCategory(excludeCategories = []) {
 ### Exemplu 2: Vineri Seara, Ploios, 8°C, Cu Prietenii
 
 **Context Analizat:**
+
 - 🌧️ Ploios (activități interioare)
 - 🌆 Seara (socializare)
 - 📅 Vineri (ieșire cu prietenii)
 - 👥 Grup de prieteni
 
 **Planuri Generate:**
+
 - **Plan A**: Bar → Cinema → Cafenea
 - **Plan B**: Cinema → Bar → Cafenea
 - **Plan C**: Cafenea → Bar → Cinema
@@ -201,12 +220,14 @@ function selectWeightedCategory(excludeCategories = []) {
 ### Exemplu 3: Miercuri Prânz, Înnorat, 15°C, Solo
 
 **Context Analizat:**
+
 - ☁️ Înnorat (activități mixte)
 - 🕐 Prânz (timp limitat)
 - 📅 Miercuri (zi lucrătoare)
 - 🧍 Solo (activități contemplative)
 
 **Planuri Generate:**
+
 - **Plan A**: Muzeu → Cafenea
 - **Plan B**: Cafenea → Muzeu
 - **Plan C**: Parc → Cafenea

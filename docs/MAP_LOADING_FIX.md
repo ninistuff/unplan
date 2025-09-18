@@ -9,12 +9,16 @@ Harta nu se mai încărca după implementarea avatarului îmbunătățit pe hart
 ## 🔍 **Cauza Problemei**
 
 **String HTML Complex cu Escape-uri Problematice:**
+
 ```javascript
 // PROBLEMATIC - Escape-uri prea complexe
-html: '<div style="..."><img src="'+avatar+'" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<div style=\\\"width:100%;height:100%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px\\\">📍</div>\';"/></div>'
+html: '<div style="..."><img src="' +
+  avatar +
+  '" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<div style=\\\"width:100%;height:100%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px\\\">📍</div>\';"/></div>';
 ```
 
 **Probleme identificate:**
+
 - ❌ **Escape-uri multiple**: `\\\"` și `\'` în același string
 - ❌ **String prea lung**: Greu de citit și de debugat
 - ❌ **Parsing JavaScript**: Browserul nu putea parsa corect string-ul
@@ -25,32 +29,42 @@ html: '<div style="..."><img src="'+avatar+'" onerror="this.style.display=\'none
 ### 1. **Simplificarea String-ului HTML**
 
 **Înainte (problematic):**
+
 ```javascript
 icon = L.divIcon({
-  html: '<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:4px solid #16a34a;box-shadow:0 4px 12px rgba(0,0,0,.3);background:#fff"><img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<div style=\\\"width:100%;height:100%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px\\\">📍</div>\';"/></div>',
+  html:
+    '<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:4px solid #16a34a;box-shadow:0 4px 12px rgba(0,0,0,.3);background:#fff"><img src="' +
+    avatar +
+    '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<div style=\\\"width:100%;height:100%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:18px\\\">📍</div>\';"/></div>',
   // ... rest of config
 });
 ```
 
 **După (funcțional):**
+
 ```javascript
 // Construire progresivă a string-ului HTML
-var avatarHtml = '<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:4px solid #16a34a;box-shadow:0 4px 12px rgba(0,0,0,.3);background:#fff">';
-avatarHtml += '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentNode.style.background=\'#16a34a\';this.parentNode.innerHTML=\'📍\';this.parentNode.style.display=\'flex\';this.parentNode.style.alignItems=\'center\';this.parentNode.style.justifyContent=\'center\';this.parentNode.style.color=\'white\';this.parentNode.style.fontWeight=\'bold\';this.parentNode.style.fontSize=\'18px\';"/>';
-avatarHtml += '</div>';
+var avatarHtml =
+  '<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:4px solid #16a34a;box-shadow:0 4px 12px rgba(0,0,0,.3);background:#fff">';
+avatarHtml +=
+  '<img src="' +
+  avatar +
+  "\" style=\"width:100%;height:100%;object-fit:cover\" onerror=\"this.style.display='none';this.parentNode.style.background='#16a34a';this.parentNode.innerHTML='📍';this.parentNode.style.display='flex';this.parentNode.style.alignItems='center';this.parentNode.style.justifyContent='center';this.parentNode.style.color='white';this.parentNode.style.fontWeight='bold';this.parentNode.style.fontSize='18px';\"/>";
+avatarHtml += "</div>";
 
 icon = L.divIcon({
   html: avatarHtml,
   className: "",
-  iconSize: [36,36],
-  iconAnchor: [18,36],
-  popupAnchor: [0,-36]
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
+  popupAnchor: [0, -36],
 });
 ```
 
 ### 2. **Îmbunătățirea Error Handling-ului**
 
 **Fallback Simplificat pentru Avatar:**
+
 ```javascript
 // În loc de innerHTML complex, folosim style properties individuale
 onerror="
@@ -69,12 +83,18 @@ onerror="
 ### 3. **Logging Detaliat pentru Debugging**
 
 **În React Native (`app/plan/[id].tsx`):**
+
 ```typescript
-const payload = { points, mode: plan.mode, segments: plan.routeSegments || [], userAvatar: user?.profile?.avatarUri };
-console.log('[PlanDetails] Payload for map:', payload);
+const payload = {
+  points,
+  mode: plan.mode,
+  segments: plan.routeSegments || [],
+  userAvatar: user?.profile?.avatarUri,
+};
+console.log("[PlanDetails] Payload for map:", payload);
 
 const onWebViewLoad = () => {
-  console.log('[PlanDetails] WebView loaded, injecting renderPlan');
+  console.log("[PlanDetails] WebView loaded, injecting renderPlan");
   webRef.current?.injectJavaScript(`
     try {
       console.log('[WebView] Calling renderPlan with payload');
@@ -89,20 +109,23 @@ const onWebViewLoad = () => {
 ```
 
 **În HTML Map (`web/mapHtml.ts`):**
+
 ```javascript
-window.renderPlan = async function(payload){
-  try{
-    console.log('[MapHTML] renderPlan called with payload:', payload);
+window.renderPlan = async function (payload) {
+  try {
+    console.log("[MapHTML] renderPlan called with payload:", payload);
     clearAll();
     const points = payload.points || [];
     const avatar = payload.userAvatar || null;
-    console.log('[MapHTML] Processing ' + points.length + ' points, avatar: ' + (avatar ? 'present' : 'none'));
-    
+    console.log(
+      "[MapHTML] Processing " + points.length + " points, avatar: " + (avatar ? "present" : "none"),
+    );
+
     // ... processing logic
-    
-    console.log('[MapHTML] Successfully displayed ' + points.length + ' location markers');
-  }catch(e){
-    console.error('[MapHTML] Error in renderPlan:', e);
+
+    console.log("[MapHTML] Successfully displayed " + points.length + " location markers");
+  } catch (e) {
+    console.error("[MapHTML] Error in renderPlan:", e);
   }
 };
 ```
@@ -116,6 +139,7 @@ window.renderPlan = async function(payload){
 3. **Verifică logs-urile** în consolă:
 
 **Logs-uri de succes așteptate:**
+
 ```
 [PlanDetails] Payload for map: {points: [...], mode: "foot", segments: [], userAvatar: "..."}
 [PlanDetails] WebView loaded, injecting renderPlan
@@ -128,6 +152,7 @@ window.renderPlan = async function(payload){
 ```
 
 **Logs-uri de eroare (dacă apar probleme):**
+
 ```
 [WebView] renderPlan error: SyntaxError: Unexpected token
 [MapHTML] Error in renderPlan: ReferenceError: ...
@@ -143,13 +168,13 @@ window.renderPlan = async function(payload){
 
 ## 📊 **Comparație Înainte vs După**
 
-| Aspect | Înainte | După |
-|--------|---------|------|
-| **String HTML** | Monolitic, escape-uri complexe | Progresiv, clar |
-| **Error Handling** | innerHTML complex | Style properties individuale |
-| **Debugging** | Fără logging | Logging detaliat |
-| **Mentenanță** | Greu de citit | Ușor de înțeles |
-| **Stabilitate** | Erori de parsing | Funcționare stabilă |
+| Aspect             | Înainte                        | După                         |
+| ------------------ | ------------------------------ | ---------------------------- |
+| **String HTML**    | Monolitic, escape-uri complexe | Progresiv, clar              |
+| **Error Handling** | innerHTML complex              | Style properties individuale |
+| **Debugging**      | Fără logging                   | Logging detaliat             |
+| **Mentenanță**     | Greu de citit                  | Ușor de înțeles              |
+| **Stabilitate**    | Erori de parsing               | Funcționare stabilă          |
 
 ## 🔧 **Principii Aplicate**
 

@@ -8,11 +8,11 @@ Descriere scurtă
 
 ## Checklist
 
-* [ ] Lint trece local
-* [ ] Typecheck trece local
-* [ ] CI verde
-* [ ] Fără console.log
-* [ ] README actualizat dacă e nevoie
+- [ ] Lint trece local
+- [ ] Typecheck trece local
+- [ ] CI verde
+- [ ] Fără console.log
+- [ ] README actualizat dacă e nevoie
 
 ## Testare
 

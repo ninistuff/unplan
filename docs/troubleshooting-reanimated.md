@@ -13,6 +13,7 @@
    - react-native-reanimated: ~4.1.0 (starts with 4)
 
 2. **Installed missing dependencies:**
+
    ```bash
    npx expo install react-native-worklets
    npx expo install react-native-reanimated
@@ -25,6 +26,7 @@
    - Kept `expo-router/babel` plugin in correct order
 
 4. **Verified installation:**
+
    ```bash
    npm ls react-native-reanimated react-native-worklets
    ```
@@ -43,10 +45,10 @@
 module.exports = function (api) {
   api.cache(true);
   return {
-    presets: ['babel-preset-expo'],
+    presets: ["babel-preset-expo"],
     plugins: [
-      'expo-router/babel',
-      'react-native-worklets/plugin'  // Last plugin for Reanimated v4
+      "expo-router/babel",
+      "react-native-worklets/plugin", // Last plugin for Reanimated v4
     ],
   };
 };
@@ -69,6 +71,7 @@ module.exports = function (api) {
 ## Verification
 
 After applying the fix:
+
 1. Metro bundler starts without errors
 2. No "Cannot find module react-native-worklets/plugin" error
 3. Reanimated animations work correctly in the app

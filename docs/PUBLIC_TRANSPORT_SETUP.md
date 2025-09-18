@@ -5,12 +5,14 @@ This guide explains how to set up and troubleshoot public transport routing in t
 ## Overview
 
 The app supports public transport routing through two methods:
+
 1. **OpenTripPlanner (OTP)** - Full GTFS-based routing (recommended)
 2. **Fallback routing** - Basic heuristic-based routing when OTP is unavailable
 
 ## OpenTripPlanner Setup
 
 ### Prerequisites
+
 - A running OpenTripPlanner server with GTFS data for your region
 - Network access to the OTP server from your development environment
 
@@ -49,12 +51,14 @@ curl "https://your-otp-server.com/otp/routers/default/plan?fromPlace=44.4268,26.
 When OTP is unavailable, the app automatically falls back to basic transit routing:
 
 ### Features
+
 - Estimates transit routes using heuristics
 - Combines walking + public transport segments
 - Chooses between bus/metro based on distance
 - Provides reasonable time estimates
 
 ### Limitations
+
 - No real-time data
 - No actual route schedules
 - Simplified route geometry
@@ -67,24 +71,25 @@ When OTP is unavailable, the app automatically falls back to basic transit routi
 ```javascript
 // In your app, you can check if OTP is configured:
 const otpUrl = process.env.OTP_BASE_URL || process.env.EXPO_PUBLIC_OTP_BASE_URL;
-console.log('OTP URL:', otpUrl || 'Not configured');
+console.log("OTP URL:", otpUrl || "Not configured");
 ```
 
 ### Enable Debug Logging
 
 The transit router includes detailed logging. Check your console for messages like:
+
 - `[TransitRouter] Planning transit route...`
 - `[TransitRouter] OTP failed (...), using fallback`
 - `[GeneratePlans] Planning transit route 1/2`
 
 ### Common Error Messages
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "OTP server not configured" | Missing environment variables | Set OTP_BASE_URL or EXPO_PUBLIC_OTP_BASE_URL |
-| "OTP server error: 404" | Wrong server URL or path | Verify OTP server URL and router name |
-| "No transit routes found" | No GTFS coverage | Check if GTFS data covers your area |
-| "Network error" | Connection issues | Check internet connectivity and server status |
+| Error                       | Cause                         | Solution                                      |
+| --------------------------- | ----------------------------- | --------------------------------------------- |
+| "OTP server not configured" | Missing environment variables | Set OTP_BASE_URL or EXPO_PUBLIC_OTP_BASE_URL  |
+| "OTP server error: 404"     | Wrong server URL or path      | Verify OTP server URL and router name         |
+| "No transit routes found"   | No GTFS coverage              | Check if GTFS data covers your area           |
+| "Network error"             | Connection issues             | Check internet connectivity and server status |
 
 ## Performance Tips
 
@@ -98,17 +103,17 @@ The transit router includes detailed logging. Check your console for messages li
 ### Testing Transit Routes
 
 ```javascript
-import { planTransitRoute } from './utils/transitRouter';
+import { planTransitRoute } from "./utils/transitRouter";
 
 // Test a route
 const result = await planTransitRoute(
   { lat: 44.4268, lon: 26.1025 }, // from
   { lat: 44.4378, lon: 26.0969 }, // to
-  new Date(),                     // when
-  1000                           // max walk meters
+  new Date(), // when
+  1000, // max walk meters
 );
 
-console.log('Route result:', result);
+console.log("Route result:", result);
 ```
 
 ### Adding New Transit APIs

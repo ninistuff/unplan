@@ -16,36 +16,49 @@ După implementarea rutării reale cu OSRM, aplicația nu mai genera niciun plan
 ### 1. **Timeout-uri pentru Toate Operațiunile Asincrone**
 
 **POI Selection cu Timeout:**
+
 ```typescript
 const withRealDist = await Promise.race([
-  Promise.all(limitedCandidates.map(async (p) => { /* routing */ })),
-  new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000)) // 3 sec
+  Promise.all(
+    limitedCandidates.map(async (p) => {
+      /* routing */
+    }),
+  ),
+  new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000)), // 3 sec
 ]);
 ```
 
 **Segment Routing cu Timeout:**
+
 ```typescript
 const route = await Promise.race([
   calculateRealRoute(cur, found, segmentKind),
-  new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000)) // 2 sec
+  new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000)), // 2 sec
 ]);
 ```
 
 **Plan Generation cu Timeout:**
+
 ```typescript
 const [A, B, C] = await Promise.race([
-  Promise.all([/* plan generation */]),
-  new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Plan generation timeout')), 15000)) // 15 sec
+  Promise.all([
+    /* plan generation */
+  ]),
+  new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Plan generation timeout")), 15000),
+  ), // 15 sec
 ]);
 ```
 
 ### 2. **Limitarea Numărului de Apeluri OSRM**
 
 **Înainte:**
+
 - Se încerca rutarea pentru toți candidații POI
 - Fără limită de timp sau număr
 
 **După:**
+
 ```typescript
 // Limit to 5 candidates for performance
 const limitedCandidates = candidates.slice(0, 5);
@@ -54,6 +67,7 @@ const limitedCandidates = candidates.slice(0, 5);
 ### 3. **Fallback Complet la Planuri Simple**
 
 **Funcția `buildSimplePlan`:**
+
 ```typescript
 function buildSimplePlan(
   id: string,
@@ -61,7 +75,7 @@ function buildSimplePlan(
   start: LatLng,
   pool: POI[],
   seq: Array<POI["category"]>,
-  transportMode: "foot" | "bike" | "driving"
+  transportMode: "foot" | "bike" | "driving",
 ): Plan {
   // Generează planuri fără rutare reală, doar cu haversine
   // Distanțe adaptive: driving=15km, bike=8km, foot=1.2km
@@ -69,6 +83,7 @@ function buildSimplePlan(
 ```
 
 **Fallback Logic:**
+
 ```typescript
 try {
   // Încearcă planuri cu rutare reală
@@ -82,6 +97,7 @@ try {
 ### 4. **Corectarea Scope-ului Variabilelor**
 
 **Înainte:**
+
 ```typescript
 try {
   const [A, B, C] = await Promise.all([...]);
@@ -92,6 +108,7 @@ try {
 ```
 
 **După:**
+
 ```typescript
 let A: Plan, B: Plan, C: Plan; // Declarate în afara
 
@@ -107,7 +124,9 @@ try {
 
 ```typescript
 console.log(`[GeneratePlans] Creating plans with transport mode: ${transportMode}`);
-console.log(`[GeneratePlans] Successfully created ${A ? 'A' : ''}${B ? 'B' : ''}${C ? 'C' : ''} plans`);
+console.log(
+  `[GeneratePlans] Successfully created ${A ? "A" : ""}${B ? "B" : ""}${C ? "C" : ""} plans`,
+);
 console.warn(`[GeneratePlans] Real routing failed for ${transportMode}, using haversine fallback`);
 console.error(`[GeneratePlans] Plan generation failed:`, error);
 ```
@@ -123,10 +142,10 @@ console.error(`[GeneratePlans] Plan generation failed:`, error);
 
 ### Timeout-uri Progresive:
 
-| Operațiune | Timeout | Fallback |
-|------------|---------|----------|
-| **POI Selection** | 3 secunde | Haversine |
-| **Segment Routing** | 2 secunde | Segment simplu |
+| Operațiune          | Timeout    | Fallback       |
+| ------------------- | ---------- | -------------- |
+| **POI Selection**   | 3 secunde  | Haversine      |
+| **Segment Routing** | 2 secunde  | Segment simplu |
 | **Plan Generation** | 15 secunde | Planuri simple |
 
 ## 🧪 **Testare**
