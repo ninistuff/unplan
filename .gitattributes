@@ -1,18 +1,13 @@
 * text=auto eol=lf
-
-*.ts   text eol=lf
-*.tsx  text eol=lf
-*.js   text eol=lf
-*.jsx  text eol=lf
-*.json text eol=lf
-*.md   text eol=lf
-*.yml  text eol=lf
-*.yaml text eol=lf
-*.css  text eol=lf
-
-*.png  binary
-*.jpg  binary
+gradlew text eol=lf
+*.bat text eol=crlf
+*.sh text eol=lf
+*.pbxproj text eol=lf
+*.png binary
+*.jpg binary
 *.jpeg binary
-*.gif  binary
-
-*.svg  text eol=lf
+*.gif binary
+*.pdf binary
+*.mp4 binary
+*.mov binary
+*.zip binary
