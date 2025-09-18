@@ -1,0 +1,11 @@
+node_modules
+android
+ios
+.expo
+.expo-shared
+dist
+build
+coverage
+.out
+.nyc_output
+*.log
