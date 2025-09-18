@@ -34,7 +34,7 @@ export default function ResultsScreen() {
   const cancelledRef = useRef(false);
   const requestKeyRef = useRef<string>("");
   const currentControllerRef = useRef<AbortController | null>(null);
-  const [timeoutBanner, setTimeoutBanner] = useState(false);
+  const [timeoutBanner] = useState(false);
 
   const [plans, setPlans] = useState<Plan[]>([]);
 
@@ -232,12 +232,12 @@ export default function ResultsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState<string>("");
-  const [debugInfo, setDebugInfo] = useState<string>("");
+  const [currentStep] = useState<string>("");
+  const [debugInfo] = useState<string>("");
 
   // Simple toast implementation
-  const [toastMessage, setToastMessage] = useState<string>("");
-  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage] = useState<string>("");
+  const [toastVisible] = useState(false);
 
   const options: GenerateOptions = useMemo(() => {
     // Normalize runtime params to GenerateOptions
@@ -315,6 +315,59 @@ export default function ResultsScreen() {
     return String(item.id ?? index);
   }, []);
 
+  const load = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    cancelledRef.current = false;
+    setLoading(true);
+    setError(null);
+    setGenerationProgress(0);
+
+    // watchdog abort
+    const aborter = () => {
+      if (currentControllerRef.current) {
+        currentControllerRef.current.abort();
+      }
+    };
+    const watchdog = setTimeout(aborter, 30000);
+
+    try {
+      const controller = new AbortController();
+      currentControllerRef.current = controller;
+
+      const t0 = globalThis.performance?.now?.() ?? Date.now();
+
+      const result = await generatePlans(options, controller.signal);
+
+      const t1 = globalThis.performance?.now?.() ?? Date.now();
+      const timingMs = Math.round(t1 - t0);
+
+      if (process.env.EXPO_PUBLIC_DEBUG === "true") {
+        console.log("[results] generatePlans ms =", timingMs);
+      }
+
+      if (!cancelledRef.current) {
+        setPlans(result || []);
+        setError(null);
+      }
+    } catch (err: any) {
+      if (!cancelledRef.current) {
+        if (err?.name === "AbortError") {
+          console.log("[Results] Request was aborted");
+        } else {
+          console.error("[Results] Generation error:", err);
+          setError(err?.message || "Unknown error");
+        }
+      }
+    } finally {
+      clearTimeout(watchdog);
+      inFlight.current = false;
+      if (!cancelledRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [options]);
+
   // Header component for FlatList
   const ListHeaderComponent = useCallback(
     () => (
@@ -377,123 +430,6 @@ export default function ResultsScreen() {
       }
     };
   }, []);
-
-  const load = useCallback(async () => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    cancelledRef.current = false;
-    setLoading(true);
-    setError(null);
-    setGenerationProgress(0);
-
-    // watchdog abort
-    const aborter = () => {
-      cancelledRef.current = true;
-      setTimeoutBanner(true);
-      setGenerationProgress(100);
-    };
-
-    requestKeyRef.current = normalizedLink;
-    const controller = new AbortController();
-    currentControllerRef.current = controller;
-    const sig = controller.signal;
-    const guard = setTimeout(() => {
-      if (inFlight.current && !cancelledRef.current) {
-        controller.abort();
-        aborter();
-        // Minimal local fallback plan to keep UI responsive
-        const fallback: Plan[] = [
-          {
-            id: "wd-1",
-            title: lang === "ro" ? "Plan simplu" : "Simple plan",
-            steps: [],
-            mode: "foot",
-            km: 0,
-            min: 60,
-          },
-        ];
-        setPlans(fallback);
-      }
-    }, 5000);
-
-    try {
-      const currentUserLang = user?.profile?.language || "ro";
-      const currentOptions = options;
-
-      setCurrentStep(currentUserLang === "ro" ? "Analizez locația..." : "Analyzing location...");
-      setGenerationProgress(20);
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      setCurrentStep(currentUserLang === "ro" ? "Generez planuri..." : "Generating plans...");
-
-      // Debug logging pentru parametrii specificați
-      const debugParams = `Duration: ${currentOptions.duration}min, Transport: ${currentOptions.transport}, WithWho: ${currentOptions.withWho}, Budget: ${currentOptions.budget}`;
-      console.log("[Results] 🔍 Debug params:", debugParams);
-      setDebugInfo(debugParams);
-
-      if (
-        currentOptions.duration === 120 &&
-        currentOptions.transport === "walk" &&
-        currentOptions.withWho === "friends" &&
-        currentOptions.budget === 200
-      ) {
-        console.log("[Results] 🎯 EXACT MATCH: 2h, walk, friends, 200 lei");
-        setDebugInfo((prev) => prev + " | 🎯 EXACT MATCH");
-      }
-
-      // Generate
-      console.log("[Results] using generatePlansReal");
-      const resRaw = await generatePlans(currentOptions, sig);
-      console.log(
-        "[Results] got plans from Real:",
-        resRaw?.length,
-        resRaw?.map((p) => p.steps.length),
-      );
-
-      const arr = Array.isArray(resRaw) ? resRaw : [];
-      setPlans(arr);
-      console.log("[results] sample plan", arr?.[0]);
-
-      // Move progress to 85% only after generation step completes or aborts
-      setGenerationProgress(85);
-      if (cancelledRef.current) return;
-      if (requestKeyRef.current !== normalizedLink) return;
-
-      setCurrentStep(currentUserLang === "ro" ? "Finalizez..." : "Finalizing...");
-      setGenerationProgress(100);
-
-      // Success toast
-      setToastMessage(
-        currentUserLang === "ro"
-          ? "🎉 Planuri generate cu succes!"
-          : "🎉 Plans generated successfully!",
-      );
-      setToastVisible(true);
-      setTimeout(() => setToastVisible(false), 3000);
-    } catch (e: any) {
-      if (!cancelledRef.current) {
-        const currentUserLang = user?.profile?.language || "ro";
-        setError(
-          e?.message ||
-            (currentUserLang === "ro"
-              ? "Nu am putut genera planurile"
-              : "Failed to generate plans"),
-        );
-        setToastMessage(
-          currentUserLang === "ro"
-            ? `❌ Eroare: ${e?.message || "Nu am putut genera planurile"}`
-            : `❌ Error: ${e?.message || "Failed to generate plans"}`,
-        );
-        setToastVisible(true);
-        setTimeout(() => setToastVisible(false), 3000);
-      }
-    } finally {
-      clearTimeout(guard);
-      setLoading(false);
-      setCurrentStep("");
-      inFlight.current = false;
-    }
-  }, [options, normalizedLink, lang, user?.profile?.language]);
 
   // Debounced load function for filter changes (available for future use)
   // const debouncedLoad = useCallback(() => {
