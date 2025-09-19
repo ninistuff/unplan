@@ -13,6 +13,7 @@ import {
   Text,
   View,
 } from "react-native";
+import type { PanResponderInstance } from "react-native";
 import { useAuth } from "../../lib/auth";
 import { keyForPlan, useFavorites } from "../../lib/favorites";
 import { t } from "../../lib/i18n";
@@ -457,7 +458,7 @@ export default function ResultsScreen() {
       load();
     });
     return () => {
-      (task as any)?.cancel?.();
+      (task as { cancel?: () => void })?.cancel?.();
     };
   }, [normalizedLink, load]);
 
@@ -506,7 +507,13 @@ export default function ResultsScreen() {
       </View>
     );
 
-  const Card = ({ children, panHandlers }: { children: React.ReactNode; panHandlers?: any }) => (
+  const Card = ({
+    children,
+    panHandlers,
+  }: {
+    children: React.ReactNode;
+    panHandlers?: PanResponderInstance["panHandlers"];
+  }) => (
     <View
       {...(panHandlers || {})}
       style={{
