@@ -1,7 +1,7 @@
 // lib/resultsUtils.ts
 // Utility functions extracted from Results screen for reusability
 
-import type { Plan } from "./planTypes";
+import type { Plan, PlanStep } from "./planTypes";
 
 /**
  * Format minutes to human-readable time string
@@ -88,8 +88,8 @@ export function stopsPreview(p: Plan): string {
   const names =
     p.stops?.map((s) => s.name) ??
     (p.steps || [])
-      .filter((s: any) => (s as any).kind === "poi")
-      .map((s: any) => (s as any).name);
+      .filter((s: PlanStep): s is PlanStep & { kind: "poi" } => s.kind === "poi")
+      .map((s) => s.name);
   return (names || []).slice(0, 3).join(" → ");
 }
 
