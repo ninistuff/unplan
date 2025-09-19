@@ -68,7 +68,7 @@ export default function LocationAwareWeather() {
       console.log("[LocationAwareWeather] City detected:", city?.name || "Unknown");
 
       setLocation({ lat, lon, neighborhood, city });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[LocationAwareWeather] Location detection failed:", err);
 
       // Try to use cached location first
@@ -87,13 +87,14 @@ export default function LocationAwareWeather() {
       }
 
       // Handle specific error types
-      if (err.code === "PERMISSION_DENIED") {
+      const errorCode = (err as any)?.code;
+      if (errorCode === "PERMISSION_DENIED") {
         setError(
           language === "en" ? "Location permission denied" : "Permisiunea de locație refuzată",
         );
-      } else if (err.code === "TIMEOUT") {
+      } else if (errorCode === "TIMEOUT") {
         setError(language === "en" ? "Location request timed out" : "Cererea de locație a expirat");
-      } else if (err.code === "LOCATION_UNAVAILABLE") {
+      } else if (errorCode === "LOCATION_UNAVAILABLE") {
         setError(
           language === "en"
             ? "Location services unavailable"
