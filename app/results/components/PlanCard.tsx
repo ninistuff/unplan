@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React from "react";
-import { Platform, Pressable, Share, Text, View } from "react-native";
+import { Pressable, Share, Text, View } from "react-native";
 import type { Plan } from "../../../lib/planTypes";
 import { getPlanTheme, getTransportIcon, stopsPreview, metaUnits } from "../../../lib/resultsUtils";
 import { MetaInfoRow, TransitBadge } from "./POIBadge";
