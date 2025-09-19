@@ -266,7 +266,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
       afterWho: afterWho.length,
       radius: rad,
       requireOpen,
-    } as any;
+    } as const;
 
     if (afterWho.length > 0) {
       selectedPois = afterWho;
@@ -381,11 +381,11 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     anchor: LatLng,
     cats: string[],
   ): {
-    steps: { name: string; lat: number; lon: number; category: string }[];
+    steps: { name: string; lat: number; lon: number; category: POI["category"] }[];
     travelMin: number;
     visitMin: number;
   } | null {
-    const results: { name: string; lat: number; lon: number; category: string }[] = [];
+    const results: { name: string; lat: number; lon: number; category: POI["category"] }[] = [];
     let usedIds = new Set<string>();
     let travelMin = 0;
     let visitMin = 0;
@@ -423,7 +423,9 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
     );
 
     for (const cat of cats) {
-      const candidate = byScore.find((p) => p.category === (cat as any) && !usedIds.has(p.id));
+      const candidate = byScore.find(
+        (p) => p.category === (cat as (typeof byScore)[number]["category"]) && !usedIds.has(p.id),
+      );
       if (!candidate) {
         console.log(`[Itinerary] ❌ No candidate for category: ${cat}`);
         continue;
@@ -570,7 +572,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
           kind: "poi" as const,
           name: s.name,
           coord: { lat: s.lat, lon: s.lon },
-          category: s.category as any,
+          category: s.category,
         })),
       ],
       mode,
@@ -583,7 +585,7 @@ export async function generatePlans(opts: GenerateOptions, signal?: AbortSignal)
         ? costUnknown
           ? undefined
           : cost
-        : Math.min(cost, budget)) as any,
+        : Math.min(cost, budget)) as number,
       routeSegments,
     };
 
