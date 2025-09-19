@@ -37,15 +37,15 @@ export const DISTANCE_CACHE_CONFIG = {
 export const POI_FILTER_CONFIG = {
   BOUNDING_BOX_RADIUS_KM: 2, // Initial bounding box radius in kilometers
   EXCLUDED_POI_TYPES: [
-    'cemetery',
-    'grave_yard',
-    'forest',
-    'meadow', 
-    'grass',
-    'greenfield',
-    'construction',
-    'industrial',
-    'farmland',
+    "cemetery",
+    "grave_yard",
+    "forest",
+    "meadow",
+    "grass",
+    "greenfield",
+    "construction",
+    "industrial",
+    "farmland",
   ],
   REQUIRED_NAME_MIN_LENGTH: 3,
 } as const;
@@ -54,9 +54,31 @@ export const POI_FILTER_CONFIG = {
  * Opening hours status enum
  */
 export const OPENING_HOURS_STATUS = {
-  OPEN: 'open',
-  CLOSED: 'closed', 
-  UNKNOWN: 'unknown',
+  OPEN: "open",
+  CLOSED: "closed",
+  UNKNOWN: "unknown",
 } as const;
 
-export type OpeningHoursStatus = typeof OPENING_HOURS_STATUS[keyof typeof OPENING_HOURS_STATUS];
+export type OpeningHoursStatus = (typeof OPENING_HOURS_STATUS)[keyof typeof OPENING_HOURS_STATUS];
+
+export const TOP_N_POI = 120;
+export const TOP_N_MATRIX = 40;
+
+export const SCORING_WEIGHTS = {
+  distance: 0.3,
+  openStatus: 0.2,
+  categoryMatch: 0.25,
+  weatherSuitability: 0.15,
+  timeOfDayMatch: 0.05,
+  accessibilityMatch: 0.05,
+} as const;
+
+export const WEATHER_THRESHOLDS = {
+  hotC: 30,
+  coldC: 0,
+  rainMmPerH: 0.2,
+  windKph: 35,
+  RAIN_PROBABILITY_THRESHOLD: 0.35,
+  HOT_FEELS_LIKE_CELSIUS: 30,
+  WIND_SPEED_THRESHOLD_KMH: 35,
+} as const;
