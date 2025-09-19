@@ -13,10 +13,26 @@ interface TransitDebugPanelProps {
   onClose?: () => void;
 }
 
+type StatusData = {
+  otpConfigured?: boolean;
+  otpUrl?: string | null;
+  fallbackAvailable?: boolean;
+  config?: {
+    maxWalkDistance?: number;
+    requestTimeout?: number;
+  };
+};
+
+type TestResultsData = {
+  success?: boolean;
+  responseTime?: number;
+  error?: string;
+};
+
 export default function TransitDebugPanel({ visible = false, onClose }: TransitDebugPanelProps) {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<StatusData | null>(null);
   const [testing, setTesting] = useState(false);
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<TestResultsData | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -104,10 +120,10 @@ export default function TransitDebugPanel({ visible = false, onClose }: TransitD
                   Fallback Available: {status.fallbackAvailable ? "✅ Yes" : "❌ No"}
                 </Text>
                 <Text style={styles.statusItem}>
-                  Max Walk Distance: {status.config.maxWalkDistance}m
+                  Max Walk Distance: {status.config?.maxWalkDistance || "N/A"}m
                 </Text>
                 <Text style={styles.statusItem}>
-                  Request Timeout: {status.config.requestTimeout}ms
+                  Request Timeout: {status.config?.requestTimeout || "N/A"}ms
                 </Text>
               </View>
             )}
