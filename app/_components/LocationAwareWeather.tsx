@@ -87,14 +87,23 @@ export default function LocationAwareWeather() {
       }
 
       // Handle specific error types
-      const errorCode = (err as any)?.code;
-      if (errorCode === "PERMISSION_DENIED") {
+      const codeVal =
+        typeof err === "object" && err !== null && "code" in err
+          ? (err as { code?: unknown }).code
+          : undefined;
+      const errCode =
+        typeof codeVal === "string"
+          ? codeVal
+          : typeof codeVal === "number"
+            ? String(codeVal)
+            : undefined;
+      if (errCode === "PERMISSION_DENIED") {
         setError(
           language === "en" ? "Location permission denied" : "Permisiunea de locație refuzată",
         );
-      } else if (errorCode === "TIMEOUT") {
+      } else if (errCode === "TIMEOUT") {
         setError(language === "en" ? "Location request timed out" : "Cererea de locație a expirat");
-      } else if (errorCode === "LOCATION_UNAVAILABLE") {
+      } else if (errCode === "LOCATION_UNAVAILABLE") {
         setError(
           language === "en"
             ? "Location services unavailable"
