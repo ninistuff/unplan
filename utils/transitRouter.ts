@@ -5,6 +5,59 @@ import { fetchWithTimeout } from "./fetchWithTimeout";
 import type { LatLng } from "../lib/planTypes";
 // import { getTransitConfig, logTransitStatus } from "./transitConfig";
 
+// Local types for OTP API responses
+interface OtpPlace {
+  lat?: number;
+  lon?: number;
+  name?: string;
+}
+
+interface OtpLegGeometry {
+  points?: string;
+}
+
+interface OtpLeg {
+  mode?: string;
+  from?: OtpPlace;
+  to?: OtpPlace;
+  legGeometry?: OtpLegGeometry;
+}
+
+interface OtpItinerary {
+  legs?: OtpLeg[];
+}
+
+interface OtpPlan {
+  itineraries?: OtpItinerary[];
+}
+
+interface OtpResponse {
+  error?: { msg?: string };
+  plan?: OtpPlan;
+}
+
+// Type guard for OTP response
+function isOtpResponse(obj: unknown): obj is OtpResponse {
+  if (typeof obj !== "object" || obj === null) return false;
+  const response = obj as Record<string, unknown>;
+
+  // Check if error exists and has correct structure
+  if (response.error !== undefined) {
+    if (typeof response.error !== "object" || response.error === null) return false;
+    const error = response.error as Record<string, unknown>;
+    if (error.msg !== undefined && typeof error.msg !== "string") return false;
+  }
+
+  // Check if plan exists and has correct structure
+  if (response.plan !== undefined) {
+    if (typeof response.plan !== "object" || response.plan === null) return false;
+    const plan = response.plan as Record<string, unknown>;
+    if (plan.itineraries !== undefined && !Array.isArray(plan.itineraries)) return false;
+  }
+
+  return true;
+}
+
 export type TransitLegKind = "foot" | "bus" | "metro";
 
 export type TransitLeg = {
@@ -28,14 +81,30 @@ export type TransitRouteResult = {
 };
 
 function decodePolyline(str: string): LatLng[] {
-  let index = 0, lat = 0, lon = 0; const coords: LatLng[] = [];
+  let index = 0,
+    lat = 0,
+    lon = 0;
+  const coords: LatLng[] = [];
   while (index < str.length) {
-    let b = 0, shift = 0, result = 0;
-    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
-    const dlat = (result & 1) ? ~(result >> 1) : (result >> 1); lat += dlat;
-    shift = 0; result = 0;
-    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
-    const dlon = (result & 1) ? ~(result >> 1) : (result >> 1); lon += dlon;
+    let b = 0,
+      shift = 0,
+      result = 0;
+    do {
+      b = str.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+    lat += dlat;
+    shift = 0;
+    result = 0;
+    do {
+      b = str.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlon = result & 1 ? ~(result >> 1) : result >> 1;
+    lon += dlon;
     coords.push({ lat: lat / 1e5, lon: lon / 1e5 });
   }
   return coords;
@@ -43,11 +112,12 @@ function decodePolyline(str: string): LatLng[] {
 
 // Simple configuration fallback
 const transitConfig = {
-  otpBaseUrl: (typeof process !== 'undefined' && process?.env)
-    ? (process.env.OTP_BASE_URL || process.env.EXPO_PUBLIC_OTP_BASE_URL || null)
-    : null,
+  otpBaseUrl:
+    typeof process !== "undefined" && process?.env
+      ? process.env.OTP_BASE_URL || process.env.EXPO_PUBLIC_OTP_BASE_URL || null
+      : null,
   requestTimeout: 10000,
-  debugLogging: false
+  debugLogging: false,
 };
 
 // Enhanced OTP planning with better error handling and logging
@@ -57,20 +127,20 @@ export async function planTransitViaOTP(
   to: LatLng,
   when?: Date,
   maxWalkMeters: number = 1000,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<TransitLeg[] | null> {
   try {
     const otpUrl = baseUrl || transitConfig.otpBaseUrl;
     if (!otpUrl) {
-
       return null;
     }
 
     const dt = when ?? new Date();
-    const date = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-    const time = `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    const date = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    const time = `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
 
-    const url = `${otpUrl.replace(/\/$/, '')}/otp/routers/default/plan?` +
+    const url =
+      `${otpUrl.replace(/\/$/, "")}/otp/routers/default/plan?` +
       `fromPlace=${from.lat},${from.lon}&` +
       `toPlace=${to.lat},${to.lon}&` +
       `mode=TRANSIT,WALK&` +
@@ -79,16 +149,14 @@ export async function planTransitViaOTP(
       `numItineraries=1&` +
       `maxWalkDistance=${encodeURIComponent(String(maxWalkMeters))}`;
 
-
-
     if (signal?.aborted) return null;
     const res = await fetchWithTimeout(url, {
       timeoutMs: 3000,
       externalSignal: signal,
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     });
 
     if (!res.ok) {
@@ -96,35 +164,51 @@ export async function planTransitViaOTP(
       return null;
     }
 
-    const json = await res.json();
+    const json = (await res.json()) as unknown;
+
+    // Type guard for OTP response
+    if (!isOtpResponse(json)) {
+      console.error(`[TransitRouter] Invalid OTP response format`);
+      return null;
+    }
 
     if (json.error) {
-      console.error(`[TransitRouter] OTP planning failed: ${json.error.msg || 'Unknown error'}`);
+      console.error(`[TransitRouter] OTP planning failed: ${json.error.msg || "Unknown error"}`);
       return null;
     }
 
     const itin = json?.plan?.itineraries?.[0];
     if (!itin || !Array.isArray(itin.legs)) {
-
       return null;
     }
 
     const legs: TransitLeg[] = [];
-    for (const leg of itin.legs as any[]) {
-      const mode: string = String(leg.mode || '').toUpperCase();
-      const kind: TransitLegKind = mode === 'BUS' ? 'bus' :
-                                   mode === 'SUBWAY' || mode === 'TRAM' || mode === 'RAIL' ? 'metro' : 'foot';
+    for (const leg of itin.legs) {
+      if (!leg || typeof leg !== "object") continue;
 
-      const fromCoord: LatLng = { lat: leg.from?.lat, lon: leg.from?.lon };
-      const toCoord: LatLng = { lat: leg.to?.lat, lon: leg.to?.lon };
+      const mode: string = String(leg.mode || "").toUpperCase();
+      const kind: TransitLegKind =
+        mode === "BUS"
+          ? "bus"
+          : mode === "SUBWAY" || mode === "TRAM" || mode === "RAIL"
+            ? "metro"
+            : "foot";
+
+      // Safe coordinate access with validation
+      const fromLat = typeof leg.from?.lat === "number" ? leg.from.lat : 0;
+      const fromLon = typeof leg.from?.lon === "number" ? leg.from.lon : 0;
+      const toLat = typeof leg.to?.lat === "number" ? leg.to.lat : 0;
+      const toLon = typeof leg.to?.lon === "number" ? leg.to.lon : 0;
+
+      const fromCoord: LatLng = { lat: fromLat, lon: fromLon };
+      const toCoord: LatLng = { lat: toLat, lon: toLon };
 
       let shape: LatLng[] | undefined = undefined;
-      const pts = leg?.legGeometry?.points as string | undefined;
-      if (pts && typeof pts === 'string') {
+      const pts = typeof leg?.legGeometry?.points === "string" ? leg.legGeometry.points : undefined;
+      if (pts && typeof pts === "string") {
         try {
           shape = decodePolyline(pts);
-        } catch {
-        }
+        } catch {}
       }
 
       legs.push({
@@ -132,14 +216,12 @@ export async function planTransitViaOTP(
         from: fromCoord,
         to: toCoord,
         shape,
-        boardName: leg.from?.name,
-        alightName: leg.to?.name
+        boardName: typeof leg.from?.name === "string" ? leg.from.name : undefined,
+        alightName: typeof leg.to?.name === "string" ? leg.to.name : undefined,
       });
     }
 
-
     return legs;
-
   } catch (error) {
     console.error(`[TransitRouter] Exception during OTP request:`, error);
     return null;
@@ -147,7 +229,13 @@ export async function planTransitViaOTP(
 }
 
 // Legacy function for backward compatibility - now the main function returns the legacy format
-export async function planTransitViaOTPLegacy(baseUrl: string, from: LatLng, to: LatLng, when?: Date, maxWalkMeters: number = 1000): Promise<TransitLeg[] | null> {
+export async function planTransitViaOTPLegacy(
+  baseUrl: string,
+  from: LatLng,
+  to: LatLng,
+  when?: Date,
+  maxWalkMeters: number = 1000,
+): Promise<TransitLeg[] | null> {
   return await planTransitViaOTP(baseUrl, from, to, when, maxWalkMeters);
 }
 
@@ -156,7 +244,7 @@ export async function planTransitFallback(from: LatLng, to: LatLng): Promise<Tra
   const result: TransitRouteResult = {
     legs: [],
     totalDuration: 0,
-    totalDistance: 0
+    totalDistance: 0,
   };
 
   try {
@@ -166,11 +254,11 @@ export async function planTransitFallback(from: LatLng, to: LatLng): Promise<Tra
     // If distance is very short (< 500m), suggest walking only
     if (distance < 500) {
       result.legs.push({
-        kind: 'foot',
+        kind: "foot",
         from,
         to,
         duration: Math.round(distance / 1.4), // ~1.4 m/s walking speed
-        distance
+        distance,
       });
       result.totalDuration = result.legs[0].duration!;
       result.totalDistance = distance;
@@ -181,7 +269,7 @@ export async function planTransitFallback(from: LatLng, to: LatLng): Promise<Tra
     // This is a basic heuristic - in a real app you'd use local transit data
     const midPoint: LatLng = {
       lat: (from.lat + to.lat) / 2,
-      lon: (from.lon + to.lon) / 2
+      lon: (from.lon + to.lon) / 2,
     };
 
     // Walking to transit stop (assume 200m walk)
@@ -191,7 +279,7 @@ export async function planTransitFallback(from: LatLng, to: LatLng): Promise<Tra
     // Transit segment (assume average speed based on distance)
     const transitDistance = distance - 400; // minus walking segments
     const transitSpeed = distance > 5000 ? 25 : 15; // metro vs bus speed (km/h)
-    const transitDuration = Math.round((transitDistance / 1000) * 3600 / transitSpeed);
+    const transitDuration = Math.round(((transitDistance / 1000) * 3600) / transitSpeed);
 
     // Walking from transit stop
     const walkFromStop = 200;
@@ -200,42 +288,42 @@ export async function planTransitFallback(from: LatLng, to: LatLng): Promise<Tra
     // Create transit stop coordinates (simplified)
     const boardingStop: LatLng = {
       lat: from.lat + (midPoint.lat - from.lat) * 0.3,
-      lon: from.lon + (midPoint.lon - from.lon) * 0.3
+      lon: from.lon + (midPoint.lon - from.lon) * 0.3,
     };
 
     const alightingStop: LatLng = {
       lat: to.lat + (midPoint.lat - to.lat) * 0.3,
-      lon: to.lon + (midPoint.lon - to.lon) * 0.3
+      lon: to.lon + (midPoint.lon - to.lon) * 0.3,
     };
 
     // Build legs
     result.legs = [
       {
-        kind: 'foot',
+        kind: "foot",
         from,
         to: boardingStop,
         duration: walkToStopDuration,
         distance: walkToStop,
-        alightName: 'Transit Stop'
+        alightName: "Transit Stop",
       },
       {
-        kind: distance > 5000 ? 'metro' : 'bus',
+        kind: distance > 5000 ? "metro" : "bus",
         from: boardingStop,
         to: alightingStop,
         duration: transitDuration,
         distance: transitDistance,
-        boardName: 'Transit Stop',
-        alightName: 'Transit Stop',
-        routeName: distance > 5000 ? 'Metro Line' : 'Bus Route'
+        boardName: "Transit Stop",
+        alightName: "Transit Stop",
+        routeName: distance > 5000 ? "Metro Line" : "Bus Route",
       },
       {
-        kind: 'foot',
+        kind: "foot",
         from: alightingStop,
         to,
         duration: walkFromStopDuration,
         distance: walkFromStop,
-        boardName: 'Transit Stop'
-      }
+        boardName: "Transit Stop",
+      },
     ];
 
     result.totalDuration = walkToStopDuration + transitDuration + walkFromStopDuration;
@@ -243,9 +331,8 @@ export async function planTransitFallback(from: LatLng, to: LatLng): Promise<Tra
 
     console.log(`[TransitRouter] Generated fallback route with ${result.legs.length} legs`);
     return result;
-
   } catch (error) {
-    result.error = `Fallback routing error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    result.error = `Fallback routing error: ${error instanceof Error ? error.message : "Unknown error"}`;
     console.error(`[TransitRouter] Fallback routing failed:`, error);
     return result;
   }
@@ -264,22 +351,22 @@ function haversineDistance(a: LatLng, b: LatLng): number {
 }
 
 // Main transit planning function with fallback
-export async function planTransitRoute(from: LatLng, to: LatLng, when?: Date, maxWalkMeters: number = 1000): Promise<TransitRouteResult> {
-
-
+export async function planTransitRoute(
+  from: LatLng,
+  to: LatLng,
+  when?: Date,
+  maxWalkMeters: number = 1000,
+): Promise<TransitRouteResult> {
   // Try OTP first (hard cap to 3 legs is enforced by OTP numItineraries=1)
   const otpResult = await planTransitViaOTP(null, from, to, when, maxWalkMeters);
 
   if (otpResult && otpResult.length > 0) {
-
     return {
       legs: otpResult,
       totalDuration: 0,
-      totalDistance: 0
+      totalDistance: 0,
     };
   }
-
-
 
   // Fall back to basic transit routing
   return await planTransitFallback(from, to);
