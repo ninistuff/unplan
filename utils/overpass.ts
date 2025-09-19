@@ -15,7 +15,7 @@ export interface OSMBase {
   lat?: number;
   lon?: number;
   center?: { lat: number; lon: number };
-  geometry?: Array<{ lat: number; lon: number }>;
+  geometry?: { lat: number; lon: number }[];
 }
 
 export interface OSMNode extends OSMBase {
