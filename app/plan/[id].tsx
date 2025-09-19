@@ -28,16 +28,28 @@ export default function PlanDetails() {
     );
   }
 
-  const points = plan.steps.map((s) => ({
-    name: s.kind === "start" ? "Start" : s.name,
-    lat: s.coord.lat,
-    lon: s.coord.lon,
-    kind: (s as any).kind,
-    transit: (s as any).kind === "transit" ? (s as any).transit : undefined,
-    transitAction: (s as any).kind === "transit" ? (s as any).transitAction : undefined,
-    stopId: (s as any).kind === "transit" ? (s as any).stopId : undefined,
-    imageUrl: (s as any).coord?.imageUrl || undefined,
-  }));
+  type StepView = {
+    kind: string;
+  } & Partial<{
+    transit: unknown;
+    transitAction: unknown;
+    stopId: string;
+    coord: { imageUrl?: string };
+  }>;
+
+  const points = plan.steps.map((s) => {
+    const step = s as StepView;
+    return {
+      name: s.kind === "start" ? "Start" : s.name,
+      lat: s.coord.lat,
+      lon: s.coord.lon,
+      kind: step.kind,
+      transit: step.kind === "transit" ? step.transit : undefined,
+      transitAction: step.kind === "transit" ? step.transitAction : undefined,
+      stopId: step.kind === "transit" ? step.stopId : undefined,
+      imageUrl: step.coord?.imageUrl ?? undefined,
+    };
+  });
   const payload = {
     points,
     mode: plan.mode,
@@ -86,7 +98,13 @@ export default function PlanDetails() {
               const idx = i + 1;
               if (s.kind === "start") return `${idx}. Start`;
               if (s.kind === "poi") return `${idx}. ${s.name} (${s.category})`;
-              const tr: any = s as any;
+              const tr = s as {
+                kind: "transit";
+                name?: string;
+                transit?: unknown;
+                transitAction?: unknown;
+                stopId?: string;
+              };
               const nm = tr?.name || (tr?.transit === "metro" ? "Stație metrou" : "Stație bus");
               return `${idx}. ${nm}`;
             })()}
