@@ -69,7 +69,7 @@ export function PlanCard({
   // Extract transit info
   const stepsAny = (plan.steps || []) as any[];
   const transitStep = stepsAny.find(
-    (s: any) => s.kind === "transit" && s.transitAction === "board"
+    (s: any) => s.kind === "transit" && s.transitAction === "board",
   );
 
   return (
@@ -90,28 +90,17 @@ export function PlanCard({
           <Text style={{ fontSize: 20 }}>{theme.emoji}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: "#0f172a", fontSize: 19, fontWeight: "700" }}>
-            {theme.title}
-          </Text>
+          <Text style={{ color: "#0f172a", fontSize: 19, fontWeight: "700" }}>{theme.title}</Text>
           <Text style={{ opacity: 0.7 }}>
             {plan.mode} · {plan.min} min · {plan.km} km
           </Text>
-          <Text style={{ color: "#64748b", fontSize: 13, marginTop: 2 }}>
-            {theme.description}
-          </Text>
+          <Text style={{ color: "#64748b", fontSize: 13, marginTop: 2 }}>{theme.description}</Text>
         </View>
-        <Text style={{ fontSize: 18, marginLeft: 8 }}>
-          {getTransportIcon(plan.mode || "foot")}
-        </Text>
+        <Text style={{ fontSize: 18, marginLeft: 8 }}>{getTransportIcon(plan.mode || "foot")}</Text>
       </View>
 
       {/* Transit Info */}
-      {transitStep && (
-        <TransitBadge
-          transitType={transitStep.transit}
-          name={transitStep.name}
-        />
-      )}
+      {transitStep && <TransitBadge transitType={transitStep.transit} name={transitStep.name} />}
 
       {/* Stops Preview */}
       <Text
@@ -133,7 +122,7 @@ export function PlanCard({
       {/* Action Buttons */}
       <View style={{ flexDirection: "row", marginTop: 8, alignItems: "center" }}>
         {/* Map Button */}
-        {(plan.steps || []).some((s: any) => s.kind === "poi") && (
+        {(plan.steps || []).some((s: { kind: string }) => s.kind === "poi") && (
           <Link
             href={{
               pathname: "/plan/[id]",
@@ -176,11 +165,7 @@ export function PlanCard({
           }}
         >
           <Ionicons
-            name={
-              isFavorite
-                ? ((Platform.OS === "ios" ? "heart.fill" : "heart") as any)
-                : ((Platform.OS === "ios" ? "heart" : "heart-outline") as any)
-            }
+            name={isFavorite ? "heart" : "heart-outline"}
             size={18}
             color={isFavorite ? "#ef4444" : "#111"}
           />
