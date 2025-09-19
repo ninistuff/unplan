@@ -1,6 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
+// Local types for auth module
+interface NavigatorLike {
+  language?: string;
+  languages?: readonly string[];
+}
+
+interface GlobalWithNavigator {
+  navigator?: NavigatorLike;
+}
+
+interface IntlLike {
+  DateTimeFormat?: () => {
+    resolvedOptions?: () => { locale?: string };
+  };
+}
+
 export type Interests =
   | "mancare"
   | "sport"
@@ -14,11 +30,11 @@ export type Interests =
 export type UserProfile = {
   name: string;
   dob?: string; // YYYY-MM-DD
-  language?: 'en' | 'ro';
-  units?: 'metric' | 'imperial';
+  language?: "en" | "ro";
+  units?: "metric" | "imperial";
   avatarUri?: string;
-  theme?: 'light' | 'dark' | 'auto';
-  textSize?: 'small' | 'medium' | 'large';
+  theme?: "light" | "dark" | "auto";
+  textSize?: "small" | "medium" | "large";
   preferences: {
     activity: "relaxed" | "active";
     disabilities: {
@@ -52,14 +68,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "auth:user";
 
-function detectDefaultLang(): 'en' | 'ro' {
+function detectDefaultLang(): "en" | "ro" {
   try {
-    const nav: any = (globalThis as any).navigator;
+    const global = globalThis as unknown as GlobalWithNavigator;
+    const nav = global.navigator;
     const cand = nav?.language || (Array.isArray(nav?.languages) ? nav.languages[0] : undefined);
-    const loc: any = cand || (Intl?.DateTimeFormat?.() as any)?.resolvedOptions?.().locale || '';
-    if (String(loc).toLowerCase().startsWith('ro')) return 'ro';
+    const intl = Intl as unknown as IntlLike;
+    const loc = cand || intl?.DateTimeFormat?.()?.resolvedOptions?.()?.locale || "";
+    if (String(loc).toLowerCase().startsWith("ro")) return "ro";
   } catch {}
-  return 'en';
+  return "en";
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -99,71 +117,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const defaultProfile = useMemo<UserProfile>(() => ({
-    name: "",
-    dob: undefined,
-    language: detectDefaultLang(),
-    units: 'metric',
-    avatarUri: undefined,
-    theme: 'auto',
-    textSize: 'medium',
-    preferences: {
-      activity: "relaxed",
-      disabilities: {
-        wheelchair: false,
-        reducedMobility: false,
-        lowVision: false,
-        hearingImpairment: false,
-        sensorySensitivity: false,
-        strollerFriendly: false,
+  const defaultProfile = useMemo<UserProfile>(
+    () => ({
+      name: "",
+      dob: undefined,
+      language: detectDefaultLang(),
+      units: "metric",
+      avatarUri: undefined,
+      theme: "auto",
+      textSize: "medium",
+      preferences: {
+        activity: "relaxed",
+        disabilities: {
+          wheelchair: false,
+          reducedMobility: false,
+          lowVision: false,
+          hearingImpairment: false,
+          sensorySensitivity: false,
+          strollerFriendly: false,
+        },
+        interests: [],
       },
-      interests: [],
+    }),
+    [],
+  );
+
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      // Demo-only: accept any non-empty credentials
+      if (!email || !password) throw new Error("Email and password are required");
+      const u: User = {
+        id: "local:" + Math.random().toString(36).slice(2),
+        email,
+        profile: defaultProfile,
+      };
+      setUser(u);
+      await persistUser(u);
     },
-  }), []);
+    [persistUser, defaultProfile],
+  );
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    // Demo-only: accept any non-empty credentials
-    if (!email || !password) throw new Error("Email and password are required");
-    const u: User = { id: "local:" + Math.random().toString(36).slice(2), email, profile: defaultProfile };
-    setUser(u);
-    await persistUser(u);
-  }, [persistUser, defaultProfile]);
-
-  const register = useCallback(async (email: string, password: string) => {
-    // Demo-only: create local user and sign in
-    if (!email || !password) throw new Error("Email and password are required");
-    const u: User = { id: "local:" + Math.random().toString(36).slice(2), email, profile: defaultProfile };
-    setUser(u);
-    await persistUser(u);
-  }, [persistUser, defaultProfile]);
+  const register = useCallback(
+    async (email: string, password: string) => {
+      // Demo-only: create local user and sign in
+      if (!email || !password) throw new Error("Email and password are required");
+      const u: User = {
+        id: "local:" + Math.random().toString(36).slice(2),
+        email,
+        profile: defaultProfile,
+      };
+      setUser(u);
+      await persistUser(u);
+    },
+    [persistUser, defaultProfile],
+  );
 
   const signOut = useCallback(async () => {
     setUser(null);
     await persistUser(null);
   }, [persistUser]);
 
-  const updateProfile = useCallback(async (partial: Partial<UserProfile>) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const updated: User = {
-        ...prev,
-        profile: { ...prev.profile, ...partial, preferences: {
-          ...prev.profile.preferences,
-          ...(partial.preferences ?? {}),
-          disabilities: {
-            ...prev.profile.preferences.disabilities,
-            ...(partial.preferences?.disabilities ?? {}),
+  const updateProfile = useCallback(
+    async (partial: Partial<UserProfile>) => {
+      setUser((prev) => {
+        if (!prev) return prev;
+        const updated: User = {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            ...partial,
+            preferences: {
+              ...prev.profile.preferences,
+              ...(partial.preferences ?? {}),
+              disabilities: {
+                ...prev.profile.preferences.disabilities,
+                ...(partial.preferences?.disabilities ?? {}),
+              },
+              interests: partial.preferences?.interests ?? prev.profile.preferences.interests,
+            },
           },
-          interests: partial.preferences?.interests ?? prev.profile.preferences.interests,
-        } },
-      };
-      // Persist asynchronously
-      persistUser(updated);
-      return updated;
-    });
-  }, [persistUser]);
+        };
+        // Persist asynchronously
+        persistUser(updated);
+        return updated;
+      });
+    },
+    [persistUser],
+  );
 
-  const value = useMemo<AuthContextType>(() => ({ user, initializing, signIn, register, signOut, updateProfile }), [user, initializing, signIn, register, signOut, updateProfile]);
+  const value = useMemo<AuthContextType>(
+    () => ({ user, initializing, signIn, register, signOut, updateProfile }),
+    [user, initializing, signIn, register, signOut, updateProfile],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -174,15 +219,15 @@ export function useAuth() {
   return ctx;
 }
 
-function ensureUserShape(obj: any): User {
+function ensureUserShape(obj: unknown): User {
   const profileDefaults: UserProfile = {
     name: "",
     dob: undefined,
     language: detectDefaultLang(),
-    units: 'metric',
+    units: "metric",
     avatarUri: undefined,
-    theme: 'auto',
-    textSize: 'medium',
+    theme: "auto",
+    textSize: "medium",
     preferences: {
       activity: "relaxed",
       disabilities: {
@@ -196,20 +241,40 @@ function ensureUserShape(obj: any): User {
       interests: [],
     },
   };
+  // Safe property access with type guards
+  const objRecord = typeof obj === "object" && obj !== null ? (obj as Record<string, unknown>) : {};
+  const profileRecord =
+    typeof objRecord.profile === "object" && objRecord.profile !== null
+      ? (objRecord.profile as Record<string, unknown>)
+      : {};
+  const preferencesRecord =
+    typeof profileRecord.preferences === "object" && profileRecord.preferences !== null
+      ? (profileRecord.preferences as Record<string, unknown>)
+      : {};
+  const disabilitiesRecord =
+    typeof preferencesRecord.disabilities === "object" && preferencesRecord.disabilities !== null
+      ? (preferencesRecord.disabilities as Record<string, unknown>)
+      : {};
+
   const user: User = {
-    id: obj?.id ?? "local:" + Math.random().toString(36).slice(2),
-    email: obj?.email,
+    id:
+      typeof objRecord.id === "string"
+        ? objRecord.id
+        : "local:" + Math.random().toString(36).slice(2),
+    email: typeof objRecord.email === "string" ? objRecord.email : undefined,
     profile: {
       ...profileDefaults,
-      ...(obj?.profile ?? {}),
+      ...profileRecord,
       preferences: {
         ...profileDefaults.preferences,
-        ...(obj?.profile?.preferences ?? {}),
+        ...preferencesRecord,
         disabilities: {
           ...profileDefaults.preferences.disabilities,
-          ...(obj?.profile?.preferences?.disabilities ?? {}),
+          ...disabilitiesRecord,
         },
-        interests: obj?.profile?.preferences?.interests ?? [],
+        interests: Array.isArray(preferencesRecord.interests)
+          ? (preferencesRecord.interests as Interests[])
+          : [],
       },
     },
   };
