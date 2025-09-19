@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  type TextInputProps,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link, useRouter } from "expo-router";
@@ -15,7 +16,7 @@ import { t } from "../lib/i18n";
 import { color, radii, spacing, cardStyle, shadows } from "../constants/theme";
 
 export default function RegisterScreen() {
-  const { register, user } = useAuth() as any;
+  const { register, user } = useAuth() as ReturnType<typeof useAuth>;
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const lang = (user?.profile?.language ?? "en") as "en" | "ro";
@@ -35,8 +36,16 @@ export default function RegisterScreen() {
     try {
       await register(email.trim(), password);
       router.replace("/");
-    } catch (e: any) {
-      setError(e?.message ?? (lang === "ro" ? "Eroare la înregistrare" : "Registration failed"));
+    } catch (e: unknown) {
+      const errMsg =
+        e instanceof Error ? e.message : typeof e === "string" ? e : "Unexpected error";
+      setError(
+        errMsg === "Unexpected error"
+          ? lang === "ro"
+            ? "Eroare la înregistrare"
+            : "Registration failed"
+          : errMsg,
+      );
     } finally {
       setLoading(false);
     }
@@ -126,7 +135,7 @@ export default function RegisterScreen() {
   );
 }
 
-function LabeledInput({ label, ...props }: any) {
+function LabeledInput({ label, ...props }: TextInputProps & { label: string }) {
   return (
     <View style={{ gap: spacing.xs }}>
       <Text style={{ fontWeight: "700", color: color.text }}>{label}</Text>
