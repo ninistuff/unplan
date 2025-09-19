@@ -1,11 +1,11 @@
 // components/FeedbackSystem.tsx - Enhanced User Feedback System
-import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Animated, Pressable, Text, View, ViewStyle } from "react-native";
 
 interface ToastProps {
   message: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  type: "success" | "error" | "info" | "warning";
   visible: boolean;
   onHide: () => void;
 }
@@ -13,12 +13,12 @@ interface ToastProps {
 export function Toast({ message, type, visible, onHide }: ToastProps) {
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  
+
   const colors = {
-    success: { bg: '#10B981', icon: 'checkmark-circle' },
-    error: { bg: '#EF4444', icon: 'close-circle' },
-    info: { bg: '#3B82F6', icon: 'information-circle' },
-    warning: { bg: '#F59E0B', icon: 'warning' },
+    success: { bg: "#10B981", icon: "checkmark-circle" },
+    error: { bg: "#EF4444", icon: "close-circle" },
+    info: { bg: "#3B82F6", icon: "information-circle" },
+    warning: { bg: "#F59E0B", icon: "warning" },
   };
 
   const hideToast = useCallback(() => {
@@ -35,7 +35,7 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
       }),
     ]).start(() => onHide());
   }, [slideAnim, opacityAnim, onHide]);
-  
+
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -51,22 +51,22 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
           useNativeDriver: true,
         }),
       ]).start();
-      
+
       // Auto hide after 3 seconds
       const timer = setTimeout(() => {
         hideToast();
       }, 3000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [visible, hideToast, opacityAnim, slideAnim]);
-  
+
   if (!visible) return null;
-  
+
   return (
     <Animated.View
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 60,
         left: 16,
         right: 16,
@@ -76,31 +76,35 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
       }}
     >
       <Pressable onPress={hideToast}>
-        <View style={{
-          backgroundColor: colors[type].bg,
-          borderRadius: 16,
-          padding: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
-        }}>
-          <Ionicons 
-            name={colors[type].icon as any} 
-            size={24} 
-            color="#fff" 
+        <View
+          style={{
+            backgroundColor: colors[type].bg,
+            borderRadius: 16,
+            padding: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
+        >
+          <Ionicons
+            name={colors[type].icon as keyof typeof Ionicons.glyphMap}
+            size={24}
+            color="#fff"
             style={{ marginRight: 12 }}
           />
-          <Text style={{
-            color: '#fff',
-            fontSize: 16,
-            fontWeight: '600',
-            flex: 1,
-            lineHeight: 22,
-          }}>
+          <Text
+            style={{
+              color: "#fff",
+              fontSize: 16,
+              fontWeight: "600",
+              flex: 1,
+              lineHeight: 22,
+            }}
+          >
             {message}
           </Text>
           <Ionicons name="close" size={20} color="rgba(255,255,255,0.8)" />
@@ -113,17 +117,22 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
 interface HapticButtonProps {
   onPress: () => void;
   children: React.ReactNode;
-  style?: any;
-  hapticType?: 'light' | 'medium' | 'heavy';
+  style?: ViewStyle;
+  hapticType?: "light" | "medium" | "heavy";
 }
 
-export function HapticButton({ onPress, children, style, hapticType = 'light' }: HapticButtonProps) {
+export function HapticButton({
+  onPress,
+  children,
+  style,
+  hapticType = "light",
+}: HapticButtonProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  
+
   const handlePressIn = () => {
     // Haptic feedback (would need expo-haptics)
     // Haptics.impactAsync(Haptics.ImpactFeedbackStyle[hapticType]);
-    
+
     Animated.spring(scaleAnim, {
       toValue: 0.95,
       useNativeDriver: true,
@@ -131,7 +140,7 @@ export function HapticButton({ onPress, children, style, hapticType = 'light' }:
       friction: 10,
     }).start();
   };
-  
+
   const handlePressOut = () => {
     Animated.spring(scaleAnim, {
       toValue: 1,
@@ -140,7 +149,7 @@ export function HapticButton({ onPress, children, style, hapticType = 'light' }:
       friction: 10,
     }).start();
   };
-  
+
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <Pressable
@@ -160,44 +169,43 @@ interface LoadingDotsProps {
   size?: number;
 }
 
-export function LoadingDots({ color = '#007AFF', size = 8 }: LoadingDotsProps) {
+export function LoadingDots({ color = "#007AFF", size = 8 }: LoadingDotsProps) {
   const dot1 = useRef(new Animated.Value(0)).current;
   const dot2 = useRef(new Animated.Value(0)).current;
   const dot3 = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
-    const duration = 600
-    const delay = 200
-    
+    const duration = 600;
+    const delay = 200;
+
     const doDots = () => {
-    
-    Animated.sequence([
+      Animated.sequence([
         Animated.timing(dot1, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
-        Animated.timing(dot1, { toValue: 0, duration: duration / 2, useNativeDriver: true })
-    ]).start();
-      
-    setTimeout(() => {
+        Animated.timing(dot1, { toValue: 0, duration: duration / 2, useNativeDriver: true }),
+      ]).start();
+
+      setTimeout(() => {
         Animated.sequence([
-        Animated.timing(dot2, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
-        Animated.timing(dot2, { toValue: 0, duration: duration / 2, useNativeDriver: true })
-    ]).start()
-    }, delay)
-      
-    setTimeout(() => {
+          Animated.timing(dot2, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
+          Animated.timing(dot2, { toValue: 0, duration: duration / 2, useNativeDriver: true }),
+        ]).start();
+      }, delay);
+
+      setTimeout(() => {
         Animated.sequence([
-        Animated.timing(dot3, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
-        Animated.timing(dot3, { toValue: 0, duration: duration / 2, useNativeDriver: true })
-    ]).start()
-    }, delay * 2)
-    }
-    
-    doDots()
+          Animated.timing(dot3, { toValue: 1, duration: duration / 2, useNativeDriver: true }),
+          Animated.timing(dot3, { toValue: 0, duration: duration / 2, useNativeDriver: true }),
+        ]).start();
+      }, delay * 2);
+    };
+
+    doDots();
     const interval = setInterval(doDots, 1800);
     return () => clearInterval(interval);
-  }, [dot1, dot2, dot3])
-  
+  }, [dot1, dot2, dot3]);
+
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <View style={{ flexDirection: "row", alignItems: "center" }}>
       {[dot1, dot2, dot3].map((anim, index) => (
         <Animated.View
           key={index}
@@ -208,12 +216,14 @@ export function LoadingDots({ color = '#007AFF', size = 8 }: LoadingDotsProps) {
             backgroundColor: color,
             marginHorizontal: 2,
             opacity: anim,
-            transform: [{
-              scale: anim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.5, 1.2],
-              }),
-            }],
+            transform: [
+              {
+                scale: anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.5, 1.2],
+                }),
+              },
+            ],
           }}
         />
       ))}
@@ -229,15 +239,15 @@ interface ProgressRingProps {
   backgroundColor?: string;
 }
 
-export function ProgressRing({ 
-  progress, 
-  size = 60, 
-  strokeWidth = 6, 
-  color = '#007AFF',
-  backgroundColor = '#E5E7EB'
+export function ProgressRing({
+  progress,
+  size = 60,
+  strokeWidth = 6,
+  color = "#007AFF",
+  backgroundColor = "#E5E7EB",
 }: ProgressRingProps) {
   const animatedValue = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
     Animated.timing(animatedValue, {
       toValue: progress,
@@ -245,40 +255,48 @@ export function ProgressRing({
       useNativeDriver: false,
     }).start();
   }, [progress, animatedValue]);
-  
+
   return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{
-        position: 'absolute',
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        borderWidth: strokeWidth,
-        borderColor: backgroundColor,
-      }} />
-      
-      <Animated.View style={{
-        position: 'absolute',
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        borderWidth: strokeWidth,
-        borderColor: color,
-        borderTopColor: 'transparent',
-        borderRightColor: 'transparent',
-        transform: [{
-          rotate: animatedValue.interpolate({
-            inputRange: [0, 100],
-            outputRange: ['0deg', '360deg'],
-          }),
-        }],
-      }} />
-      
-      <Text style={{
-        fontSize: size * 0.2,
-        fontWeight: '700',
-        color: color,
-      }}>
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          position: "absolute",
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: strokeWidth,
+          borderColor: backgroundColor,
+        }}
+      />
+
+      <Animated.View
+        style={{
+          position: "absolute",
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: strokeWidth,
+          borderColor: color,
+          borderTopColor: "transparent",
+          borderRightColor: "transparent",
+          transform: [
+            {
+              rotate: animatedValue.interpolate({
+                inputRange: [0, 100],
+                outputRange: ["0deg", "360deg"],
+              }),
+            },
+          ],
+        }}
+      />
+
+      <Text
+        style={{
+          fontSize: size * 0.2,
+          fontWeight: "700",
+          color: color,
+        }}
+      >
         {Math.round(progress)}%
       </Text>
     </View>
@@ -289,31 +307,26 @@ export function ProgressRing({
 export function useToast() {
   const [toast, setToast] = useState<{
     message: string;
-    type: 'success' | 'error' | 'info' | 'warning';
+    type: "success" | "error" | "info" | "warning";
     visible: boolean;
   }>({
-    message: '',
-    type: 'info',
+    message: "",
+    type: "info",
     visible: false,
   });
-  
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
     setToast({ message, type, visible: true });
   };
-  
+
   const hideToast = () => {
-    setToast(prev => ({ ...prev, visible: false }));
+    setToast((prev) => ({ ...prev, visible: false }));
   };
-  
+
   const ToastComponent = () => (
-    <Toast
-      message={toast.message}
-      type={toast.type}
-      visible={toast.visible}
-      onHide={hideToast}
-    />
+    <Toast message={toast.message} type={toast.type} visible={toast.visible} onHide={hideToast} />
   );
-  
+
   return {
     showToast,
     hideToast,
