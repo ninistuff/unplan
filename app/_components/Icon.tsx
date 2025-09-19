@@ -78,5 +78,5 @@ export default function Icon({
   }
 
   // Default single icon fallback
-  return <Ionicons name={name as any} size={size} color={color} />;
+  return <Ionicons name={name} size={size} color={color} />;
 }
