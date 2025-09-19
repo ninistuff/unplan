@@ -178,11 +178,7 @@ export default function ProfileScreen() {
                     elevation: 2,
                   }}
                 >
-                  <Ionicons
-                    name={Platform.OS === "ios" ? ("camera" as any) : ("camera-outline" as any)}
-                    size={16}
-                    color="#111827"
-                  />
+                  <Ionicons name="camera" size={16} color="#111827" />
                 </Pressable>
               </View>
               <View style={{ flex: 1, paddingLeft: 16 }}>
@@ -223,11 +219,7 @@ export default function ProfileScreen() {
                       style={{ marginLeft: 6 }}
                       accessibilityLabel={lang === "ro" ? "Editează numele" : "Edit name"}
                     >
-                      <Ionicons
-                        name={Platform.OS === "ios" ? ("create" as any) : ("create-outline" as any)}
-                        size={16}
-                        color="#64748b"
-                      />
+                      <Ionicons name="create" size={16} color="#64748b" />
                     </Pressable>
                   </View>
                 )}
@@ -253,11 +245,7 @@ export default function ProfileScreen() {
                       style={{ padding: 4 }}
                       accessibilityLabel={lang === "ro" ? "Editează vârsta" : "Edit age"}
                     >
-                      <Ionicons
-                        name={Platform.OS === "ios" ? ("create" as any) : ("create-outline" as any)}
-                        size={16}
-                        color="#10b981"
-                      />
+                      <Ionicons name="create" size={16} color="#10b981" />
                     </Pressable>
                   </View>
 
