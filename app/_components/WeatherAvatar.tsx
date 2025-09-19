@@ -1,6 +1,8 @@
 // app/components/WeatherAvatar.tsx
-import LottieView from "lottie-react-native";
+import LottieView, { type AnimationObject } from "lottie-react-native";
 import { View } from "react-native";
+
+type LottieSource = string | { uri: string } | AnimationObject;
 
 type Condition = "sunny" | "cloudy" | "rainy";
 
@@ -11,19 +13,19 @@ type Props = {
 };
 
 export default function WeatherAvatar({ condition = "sunny", tempC, size = 56 }: Props) {
-  let source: any;
+  let source: LottieSource;
 
   try {
     if (condition === "rainy") {
-      source = require("../../assets/lottie/rainy.json");
+      source = require("../../assets/lottie/rainy.json") as unknown as AnimationObject;
     } else if (typeof tempC === "number" && tempC < 10) {
-      source = require("../../assets/lottie/cold.json");
+      source = require("../../assets/lottie/cold.json") as unknown as AnimationObject;
     } else if (typeof tempC === "number" && tempC >= 28) {
-      source = require("../../assets/lottie/hot.json");
+      source = require("../../assets/lottie/hot.json") as unknown as AnimationObject;
     } else if (condition === "cloudy") {
-      source = require("../../assets/lottie/cloudy.json");
+      source = require("../../assets/lottie/cloudy.json") as unknown as AnimationObject;
     } else {
-      source = require("../../assets/lottie/sunny.json");
+      source = require("../../assets/lottie/sunny.json") as unknown as AnimationObject;
     }
   } catch {
     // fallback safe circle if assets are missing
