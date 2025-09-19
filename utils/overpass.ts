@@ -4,6 +4,49 @@ import type { POI } from "../lib/planTypes";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { POI_LIMIT_PER_CATEGORY, POI_FILTER_CONFIG, OPENING_HOURS_STATUS } from "../lib/constants";
 
+// ---- Overpass minimal types (local to this file) ----
+export type OSMType = "node" | "way" | "relation";
+
+export interface OSMBase {
+  id: number;
+  type: OSMType;
+  tags?: Record<string, string>;
+  // câmpuri opționale comune, pentru compatibilitate cu codul existent
+  lat?: number;
+  lon?: number;
+  center?: { lat: number; lon: number };
+  geometry?: Array<{ lat: number; lon: number }>;
+}
+
+export interface OSMNode extends OSMBase {
+  type: "node";
+}
+
+export interface OSMWay extends OSMBase {
+  type: "way";
+  nodes?: number[];
+}
+
+export interface OSMRelationMember {
+  type: OSMType;
+  ref: number;
+  role?: string;
+}
+
+export interface OSMRelation extends OSMBase {
+  type: "relation";
+  members?: OSMRelationMember[];
+}
+
+export type OSMElement = OSMNode | OSMWay | OSMRelation;
+// ---- end Overpass minimal types ----
+
+type ExcludedLanduse = (typeof POI_FILTER_CONFIG.EXCLUDED_POI_TYPES)[number];
+
+function isExcludedLanduse(v: string): v is ExcludedLanduse {
+  return (POI_FILTER_CONFIG.EXCLUDED_POI_TYPES as readonly string[]).includes(v);
+}
+
 export type OverpassElementType = "node" | "way" | "relation";
 
 export interface OverpassCenter {
@@ -92,7 +135,7 @@ function bboxFromCenter(
   const dLon = radiusMeters / (111320 * Math.cos((lat * Math.PI) / 180));
   return { s: lat - dLat, w: lon - dLon, n: lat + dLat, e: lon + dLon };
 }
-function nameValid(name: any): boolean {
+function nameValid(name: unknown): boolean {
   if (typeof name !== "string") return false;
   const n = name.trim();
   if (n.length < POI_FILTER_CONFIG.REQUIRED_NAME_MIN_LENGTH) return false;
@@ -100,9 +143,9 @@ function nameValid(name: any): boolean {
   return true;
 }
 
-function isExcludedGeneric(tags: any): boolean {
+function isExcludedGeneric(tags: Record<string, string> | undefined): boolean {
   const landuse = tags?.landuse;
-  if (POI_FILTER_CONFIG.EXCLUDED_POI_TYPES.includes(landuse)) return true;
+  if (landuse && isExcludedLanduse(landuse)) return true;
   if (tags?.amenity === "grave_yard") return true;
   if (tags?.natural === "forest") return true;
   return false;
@@ -133,7 +176,7 @@ function parseOpeningHoursSimple(
 }
 
 async function callOverpass(body: string, externalSignal?: AbortSignal) {
-  let lastErr: any;
+  let lastErr: unknown;
   for (const url of ENDPOINTS) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -159,7 +202,7 @@ async function callOverpass(body: string, externalSignal?: AbortSignal) {
   throw lastErr || new Error("Overpass indisponibil");
 }
 
-function parseElements(elements: any[]): POI[] {
+function parseElements(elements: OSMElement[]): POI[] {
   const now = new Date();
   const pois: POI[] = elements
     .map((el) => {
