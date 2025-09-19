@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   Alert,
+  TextInputProps,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Link } from "expo-router";
@@ -121,7 +122,7 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-function LabeledInput({ label, ...props }: any) {
+function LabeledInput({ label, ...props }: TextInputProps & { label: string }) {
   return (
     <View style={{ gap: spacing.xs }}>
       <Text style={{ fontWeight: "700", color: color.text }}>{label}</Text>
