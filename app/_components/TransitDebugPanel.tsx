@@ -8,15 +8,32 @@ import {
 } from "../../utils/transitConfig";
 import { planTransitRoute } from "../../utils/transitRouter";
 
+// Local types for component state
+interface TransitStatus {
+  otpConfigured: boolean;
+  otpUrl: string | null;
+  fallbackAvailable: boolean;
+  config: {
+    maxWalkDistance: number;
+    requestTimeout: number;
+  };
+}
+
+interface TestResults {
+  success: boolean;
+  error?: string;
+  responseTime?: number;
+}
+
 interface TransitDebugPanelProps {
   visible?: boolean;
   onClose?: () => void;
 }
 
 export default function TransitDebugPanel({ visible = false, onClose }: TransitDebugPanelProps) {
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<TransitStatus | null>(null);
   const [testing, setTesting] = useState(false);
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<TestResults | null>(null);
 
   useEffect(() => {
     if (visible) {
