@@ -59,6 +59,7 @@ export function Toast({ message, type, visible, onHide }: ToastProps) {
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [visible, hideToast, opacityAnim, slideAnim]);
 
   if (!visible) return null;
