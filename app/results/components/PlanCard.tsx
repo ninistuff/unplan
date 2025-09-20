@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React from "react";
 import { Pressable, Share, Text, View } from "react-native";
-import type { Plan } from "../../../lib/planTypes";
+import type { Plan, PlanStep } from "../../../lib/planTypes";
 import { getPlanTheme, getTransportIcon, stopsPreview, metaUnits } from "../../../lib/resultsUtils";
 import { MetaInfoRow, TransitBadge } from "./POIBadge";
 
@@ -19,7 +19,7 @@ interface PlanCardProps {
 
 interface CardProps {
   children: React.ReactNode;
-  panHandlers?: any;
+  panHandlers?: Record<string, unknown>;
 }
 
 function Card({ children, panHandlers }: CardProps) {
@@ -67,9 +67,10 @@ export function PlanCard({
   };
 
   // Extract transit info
-  const stepsAny = (plan.steps || []) as any[];
-  const transitStep = stepsAny.find(
-    (s: any) => s.kind === "transit" && s.transitAction === "board",
+  const steps = plan.steps || [];
+  const transitStep = steps.find(
+    (s: PlanStep): s is PlanStep & { kind: "transit" } =>
+      s.kind === "transit" && s.transitAction === "board",
   );
 
   return (
