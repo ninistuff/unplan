@@ -224,6 +224,7 @@ export default function ResultsScreen() {
       const id = setTimeout(() => setShowFallbackBanner(false), 3000);
       return () => clearTimeout(id);
     }
+    return undefined;
   }, [appliedFallbacks]);
 
   // Debug panel toggle on long press

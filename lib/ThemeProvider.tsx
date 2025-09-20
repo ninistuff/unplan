@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Appearance } from 'react-native';
-import { useAuth } from './auth';
-import { createTheme, TextSize, Theme, ThemeMode } from './theme';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Appearance } from "react-native";
+import { useAuth } from "./auth";
+import { createTheme, TextSize, Theme, ThemeMode } from "./theme";
 
 interface ThemeContextType {
   theme: Theme;
@@ -15,8 +15,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>(user?.profile?.theme ?? 'auto');
-  const [textSize, setTextSizeState] = useState<TextSize>(user?.profile?.textSize ?? 'medium');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(user?.profile?.theme ?? "auto");
+  const [textSize, setTextSizeState] = useState<TextSize>(user?.profile?.textSize ?? "medium");
 
   // Update local state when user profile changes
   useEffect(() => {
@@ -33,13 +33,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to system theme changes for auto mode
   useEffect(() => {
-    if (themeMode === 'auto') {
+    if (themeMode === "auto") {
       const subscription = Appearance.addChangeListener(() => {
         // Force re-render when system theme changes
-        setThemeModeState('auto');
+        setThemeModeState("auto");
       });
       return () => subscription?.remove();
     }
+    return undefined;
   }, [themeMode]);
 
   const setThemeMode = (mode: ThemeMode) => {
@@ -55,13 +56,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = createTheme(themeMode, textSize);
 
   return (
-    <ThemeContext.Provider value={{
-      theme,
-      themeMode,
-      textSize,
-      setThemeMode,
-      setTextSize,
-    }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        themeMode,
+        textSize,
+        setThemeMode,
+        setTextSize,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
@@ -70,7 +73,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
 }
