@@ -1,62 +1,10 @@
 // utils/transitRouter.ts
 // utils/transitRouter.ts
 import { fetchWithTimeout } from "./fetchWithTimeout";
-
 import type { LatLng } from "../lib/planTypes";
+import type { OtpResponse } from "../lib/external/otpTypes";
+import { isOtpResponse } from "../lib/external/otpTypes";
 // import { getTransitConfig, logTransitStatus } from "./transitConfig";
-
-// Local types for OTP API responses
-interface OtpPlace {
-  lat?: number;
-  lon?: number;
-  name?: string;
-}
-
-interface OtpLegGeometry {
-  points?: string;
-}
-
-interface OtpLeg {
-  mode?: string;
-  from?: OtpPlace;
-  to?: OtpPlace;
-  legGeometry?: OtpLegGeometry;
-}
-
-interface OtpItinerary {
-  legs?: OtpLeg[];
-}
-
-interface OtpPlan {
-  itineraries?: OtpItinerary[];
-}
-
-interface OtpResponse {
-  error?: { msg?: string };
-  plan?: OtpPlan;
-}
-
-// Type guard for OTP response
-function isOtpResponse(obj: unknown): obj is OtpResponse {
-  if (typeof obj !== "object" || obj === null) return false;
-  const response = obj as Record<string, unknown>;
-
-  // Check if error exists and has correct structure
-  if (response.error !== undefined) {
-    if (typeof response.error !== "object" || response.error === null) return false;
-    const error = response.error as Record<string, unknown>;
-    if (error.msg !== undefined && typeof error.msg !== "string") return false;
-  }
-
-  // Check if plan exists and has correct structure
-  if (response.plan !== undefined) {
-    if (typeof response.plan !== "object" || response.plan === null) return false;
-    const plan = response.plan as Record<string, unknown>;
-    if (plan.itineraries !== undefined && !Array.isArray(plan.itineraries)) return false;
-  }
-
-  return true;
-}
 
 export type TransitLegKind = "foot" | "bus" | "metro";
 
